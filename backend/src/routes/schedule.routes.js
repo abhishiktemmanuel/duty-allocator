@@ -1,10 +1,12 @@
 import { Router } from "express";
-import { addExamDate } from "../controllers/schedule.controller.js";
-import { registerSubject } from "../controllers/subject.controller.js";
+import {
+  addExamDate,
+  getAllExamSchedules,
+} from "../controllers/schedule.controller.js";
 
 const router = Router();
 
 router.route("/addexam").post(addExamDate);
-router.route("/newsubject").post(registerSubject);
+router.route("/getexams").get(getAllExamSchedules);
 
 export default router;

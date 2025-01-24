@@ -32,4 +32,15 @@ const registerTeacher = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, newTeacherData, "Teacher added successfully"));
 });
 
-export { registerTeacher };
+// Function to get all teachers
+const getAllTeachers = asyncHandler(async (req, res) => {
+  const teachers = await Teacher.find({});
+  if (!teachers || teachers.length === 0) {
+    throw new ApiError(404, "No teachers found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, teachers, "Teachers retrieved successfully"));
+});
+
+export { registerTeacher, getAllTeachers };

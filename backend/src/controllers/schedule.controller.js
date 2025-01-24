@@ -43,4 +43,22 @@ const addExamDate = asyncHandler(async (req, res) => {
       )
     );
 });
-export { addExamDate };
+
+// Function to get all exam schedules
+const getAllExamSchedules = asyncHandler(async (req, res) => {
+  const examSchedules = await ExamSchedule.find({});
+  if (!examSchedules || examSchedules.length === 0) {
+    throw new ApiError(404, "No exam schedules found");
+  }
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        examSchedules,
+        "Exam schedules retrieved successfully"
+      )
+    );
+});
+
+export { addExamDate, getAllExamSchedules };

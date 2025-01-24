@@ -2,7 +2,7 @@ import { Teacher } from "../models/teacher.model.js";
 import { ApiError } from "../utils/ApiError.js";
 
 // Fetch teacher details
-export const fetchTeacherDetails = async () => {
+export const getAllTeachers = async () => {
   try {
     const teachers = await Teacher.find()
       .populate("subjects", "name")

@@ -5,145 +5,149 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Duty } from "../models/duty.model.js";
 import { Teacher } from "../models/teacher.model.js";
 import { getSchedule } from "../services/getSchedule.js";
-import { fetchTeacherDetails } from "../services/getAllTeachers.js";
+import { getAllTeachers } from "../services/getAllTeachers.js";
 
-export const dutySetter = asyncHandler(async () => {
+export const dutySetter = asyncHandler(async (req, res) => {
   try {
-    // Call fetchTeacherDetails dynamically
-    const teachers = await fetchTeacherDetails();
+    const teachers = await getAllTeachers();
     const examSchedules = await getSchedule();
+    let tempTeachers = [...teachers];
 
-    // Perform operations to set duties here...
+    const meetsFullCriteria = (teacher, exam, alreadyChosen) => {
+      const teachesExamSubject = teacher.subjects.some(
+        (subj) => subj.toString() === exam.subject.toString()
+      );
+      if (teachesExamSubject) return false;
+
+      const hasOverlappingDuty = teacher.duties?.some((duty) => {
+        return (
+          duty.date?.toISOString().split("T")[0] ===
+            exam.date?.toISOString().split("T")[0] && duty.shift === exam.shift
+        );
+      });
+      if (hasOverlappingDuty) return false;
+
+      if (
+        alreadyChosen &&
+        alreadyChosen.school.toString() === teacher.school.toString()
+      ) {
+        return false;
+      }
+
+      return true;
+    };
+
+    const meetsRelaxedCriteria = (teacher, exam) => {
+      const teachesExamSubject = teacher.subjects.some(
+        (subj) => subj.toString() === exam.subject.toString()
+      );
+      if (teachesExamSubject) return false;
+
+      const hasOverlappingDuty = teacher.duties?.some((duty) => {
+        return (
+          duty.date?.toISOString().split("T")[0] ===
+            exam.date?.toISOString().split("T")[0] && duty.shift === exam.shift
+        );
+      });
+      if (hasOverlappingDuty) return false;
+
+      return true;
+    };
+
+    const findTeacher = (exam, alreadyChosen, relaxed = false) => {
+      for (let i = 0; i < tempTeachers.length; i++) {
+        const currentTeacher = tempTeachers[i];
+        const isEligible = relaxed
+          ? meetsRelaxedCriteria(currentTeacher, exam)
+          : meetsFullCriteria(currentTeacher, exam, alreadyChosen);
+
+        if (isEligible) {
+          tempTeachers.splice(i, 1);
+          return currentTeacher;
+        }
+      }
+      return null;
+    };
+
+    for (const exam of examSchedules) {
+      const selectedInvidulators = [];
+
+      while (selectedInvidulators.length < 2) {
+        let teacher =
+          findTeacher(exam, selectedInvidulators[0]) ||
+          findTeacher(exam, selectedInvidulators[0], true);
+
+        if (!teacher) {
+          console.error("No eligible teacher found for exam:", exam);
+          throw new ApiError(
+            "Not enough eligible teachers available for all duties",
+            400
+          );
+        }
+
+        selectedInvidulators.push(teacher);
+      }
+
+      if (
+        selectedInvidulators[0].subjects.some(
+          (subj) => subj.toString() === exam.subject.toString()
+        )
+      ) {
+        const alternateTeacher = findTeacher(exam, null, true);
+        if (!alternateTeacher) {
+          console.error(
+            "Unable to resolve subject conflict for invigilators:",
+            selectedInvidulators[0]
+          );
+          throw new ApiError(
+            "Unable to resolve subject conflict for invigilators",
+            400
+          );
+        }
+
+        tempTeachers.push(selectedInvidulators[0]);
+        selectedInvidulators[0] = alternateTeacher;
+      }
+
+      try {
+        const newDuty = new Duty({
+          date: exam.date,
+          shift: exam.shift,
+          invidulator1: selectedInvidulators[0]._id,
+          invidulator2: selectedInvidulators[1]._id,
+          subject: exam.subject,
+          room: exam.room,
+          standard: exam.standard,
+        });
+        await newDuty.save();
+
+        for (const invigilator of selectedInvidulators) {
+          await Teacher.findByIdAndUpdate(invigilator._id, {
+            $push: { duties: newDuty._id },
+          });
+        }
+      } catch (err) {
+        console.error("Error saving duty or updating teacher:", err.message);
+        throw new ApiError("Failed to assign duty. Please try again.", 400);
+      }
+    }
+
+    const allDuties = await Duty.find({})
+      .populate("invidulator1", "name")
+      .populate("invidulator2", "name")
+      .populate("subject", "name");
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          allDuties,
+          "Duties assigned and retrieved successfully"
+        )
+      );
   } catch (error) {
-    console.error("Error fetching data:", error.message);
-    throw error; // Re-throw for further handling if required
+    console.error("Error assigning duties:", error.message);
+    throw error;
   }
 });
-
-// // import { asyncHandler } from "../utils/asyncHandler.js";
-// // import { ApiError } from "../utils/ApiError.js";
-// // import { Duty } from "../models/duty.model.js";
-// // import { Teacher } from "../models/teacher.model.js";
-
-// // import { teacherDetailsPromise } from "../services/getSchedule.js";
-// // import { getAllTeachers } from "../services/getAllTeachers.js";
-
-// // const dutySetter = asyncHandler(async () => {
-// //   try {
-// //     // Fetch teachers and exam schedules concurrently
-// //     const [teachers, examSchedules] = await Promise.all([
-// //       getAllTeachers(), // Fetch teacher details
-// //       getSchedule(), // Fetch exam schedules
-// //     ]);
-// //     console.log(teachers, examSchedules);
-
-// //     if (!teachers.length || !examSchedules.length) {
-// //       throw new ApiError(404, "No teachers or exam schedules found");
-// //     }
-
-// //     // Initialize a map to track duties assigned to each teacher
-// //     const teacherDutyCount = new Map();
-// //     teachers.forEach((teacher) => teacherDutyCount.set(teacher.id, 0));
-
-// //     // Initialize an array to store new duties
-// //     const newDuties = [];
-
-// //     // Assign duties for each exam schedule
-// //     for (const schedule of examSchedules) {
-// //       const { date, shift, subject, room, standard } = schedule;
-
-// //       // Filter eligible teachers
-// //       const eligibleTeachers = teachers.filter((teacher) => {
-// //         // Exclude teachers who teach the subject of the exam
-// //         if (teacher.subjects.includes(subject)) return false;
-
-// //         // Ensure no two teachers from the same school are assigned to the same room
-// //         const otherDutiesInRoom = newDuties.filter(
-// //           (duty) =>
-// //             duty.room === room &&
-// //             duty.date.toISOString() === date.toISOString() &&
-// //             duty.shift === shift
-// //         );
-// //         if (
-// //           otherDutiesInRoom.some(
-// //             (duty) => duty.invidulator1.school === teacher.school
-// //           )
-// //         )
-// //           return false;
-
-// //         // Ensure the teacher doesn't already have a duty in the same shift and date
-// //         if (
-// //           newDuties.some(
-// //             (duty) =>
-// //               (duty.invidulator1 === teacher.id ||
-// //                 duty.invidulator2 === teacher.id) &&
-// //               duty.date.toISOString() === date.toISOString() &&
-// //               duty.shift === shift
-// //           )
-// //         ) {
-// //           return false;
-// //         }
-
-// //         return true;
-// //       });
-
-// //       if (eligibleTeachers.length < 2) {
-// //         throw new ApiError(
-// //           400,
-// //           `Not enough eligible teachers for room ${room} on ${date} (${shift})`
-// //         );
-// //       }
-
-// //       // Sort eligible teachers by their current number of duties (to balance workload)
-// //       eligibleTeachers.sort(
-// //         (a, b) => teacherDutyCount.get(a.id) - teacherDutyCount.get(b.id)
-// //       );
-
-// //       // Assign two teachers with the least number of duties
-// //       const [invidulator1, invidulator2] = eligibleTeachers.slice(0, 2);
-
-// //       // Create a new duty entry
-// //       const newDuty = new Duty({
-// //         date,
-// //         shift,
-// //         invidulator1: invidulator1.id,
-// //         invidulator2: invidulator2.id,
-// //         subject,
-// //         room,
-// //         standard,
-// //       });
-
-// //       newDuties.push(newDuty);
-
-// //       // Update the duty count for each assigned teacher
-// //       teacherDutyCount.set(
-// //         invidulator1.id,
-// //         teacherDutyCount.get(invidulator1.id) + 1
-// //       );
-// //       teacherDutyCount.set(
-// //         invidulator2.id,
-// //         teacherDutyCount.get(invidulator2.id) + 1
-// //       );
-// //     }
-
-// //     // Save all new duties to the database
-// //     const savedDuties = await Duty.insertMany(newDuties);
-
-// //     // Update each teacher's record with their assigned duties
-// //     for (const duty of savedDuties) {
-// //       await Teacher.findByIdAndUpdate(duty.invidulator1, {
-// //         $push: { duties: duty._id },
-// //       });
-// //       await Teacher.findByIdAndUpdate(duty.invidulator2, {
-// //         $push: { duties: duty._id },
-// //       });
-// //     }
-
-// //     console.log("Duties successfully assigned and saved.");
-// //   } catch (error) {
-// //     console.error("Error assigning duties:", error.message);
-// //     throw error; // Re-throw the error for further handling if required
-// //   }
-// // });
-
-// // export { dutySetter };

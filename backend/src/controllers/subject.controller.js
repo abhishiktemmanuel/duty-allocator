@@ -22,4 +22,16 @@ const registerSubject = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(200, newSubjectData, "Subject added successfully"));
 });
-export { registerSubject };
+
+// Function to get all subjects
+const getAllSubjects = asyncHandler(async (req, res) => {
+  const subjects = await Subject.find({});
+  if (!subjects || subjects.length === 0) {
+    throw new ApiError(404, "No subjects found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, subjects, "Subjects retrieved successfully"));
+});
+
+export { registerSubject, getAllSubjects };

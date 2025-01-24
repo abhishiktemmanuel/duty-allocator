@@ -22,4 +22,16 @@ const registerSchool = asyncHandler(async (req, res) => {
     .status(201)
     .json(new ApiResponse(200, newSchoolData, "School added successfully"));
 });
-export { registerSchool };
+
+// Function to get all schools
+const getAllSchools = asyncHandler(async (req, res) => {
+  const schools = await School.find({});
+  if (!schools || schools.length === 0) {
+    throw new ApiError(404, "No schools found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, schools, "Schools retrieved successfully"));
+});
+
+export { registerSchool, getAllSchools };
