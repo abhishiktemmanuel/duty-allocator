@@ -4,10 +4,7 @@ const app = express();
 const port = 0;
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-app.get("/twitter", (req, res) => {
-  res.send("abhishiktEmmanuel");
+  res.send("Server Running");
 });
 
 app.listen(process.env.PORT, () => {

@@ -1,10 +1,9 @@
 import './App.css'
-import TeacherForm from './components/forms/teacher.form'
-
+import Teachers from './components/pages/Teachers'
 function App() {
   return (
    <>
-   <TeacherForm />
+   <Teachers/>
    </>
   )
 }
