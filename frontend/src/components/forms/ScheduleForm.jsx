@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import InputField from "../form-components/InputField.jsx";
 import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx"; // Use the new component
 import { fetchSubjects, addSubject, submitSchedule } from "../../services/backendApi.js";
+import SelectDropdown from "../form-components/SelectDropdown.jsx";
 
 const ScheduleForm = () => {
   const {
@@ -125,14 +126,18 @@ const ScheduleForm = () => {
           error={errors.date}
         />
 
-        <SingleSelectWithAddOption
+        <SelectDropdown
+          label="Shift"
           options={[
-            { label: "Morning", value: "Morning" },
-            { label: "Evening", value: "Evening" },
+            { _id: "Morning", name: "Morning" },
+            { _id: "Evening", name: "Evening" },
           ]}
-          placeholder="Select shift"
-          onSelectionChange={(selectedOption) => setValue("shift", selectedOption)}
+          register={register("shift", {
+            required: "Please select a shift",
+          })}
+          error={errors.shift}
         />
+
 
         {/* Rooms Section */}
         <div>
