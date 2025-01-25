@@ -58,5 +58,16 @@ export const fetchTeachers = async () => {
 };
 
 export const submitSchedule = async (payload) => {
-  await axios.post("/api/v1/schedules/addexam", payload);
+  try {
+    const response = await axios.post("/api/v1/schedules/addexam", payload);
+    return response.data; // Return response data if needed
+  } catch (error) {
+    console.error(
+      "Error submitting schedule:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to submit schedule"
+    );
+  }
 };

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import InputField from "../form-components/InputField.jsx";
-import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx"; // Use the new component
+import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx";
+import RoomSelectWithAddOption from "../form-components/RoomSelectWithAddOptions.jsx"; // Import new component
 import { fetchSubjects, addSubject, submitSchedule } from "../../services/backendApi.js";
 import SelectDropdown from "../form-components/SelectDropdown.jsx";
 
@@ -15,8 +16,7 @@ const ScheduleForm = () => {
   } = useForm();
 
   const [subjects, setSubjects] = useState([]);
-  const [rooms, setRooms] = useState([]);
-  const [newRoom, setNewRoom] = useState("");
+  const [rooms, setRooms] = useState([]); // Updated to store room objects
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -58,28 +58,6 @@ const ScheduleForm = () => {
     }
   };
 
-  // Add a new room to the list
-  const addRoom = () => {
-    if (newRoom.trim()) {
-      setRooms([...rooms, newRoom.trim()]);
-      setNewRoom("");
-    }
-  };
-
-  // Handle changes to room inputs
-  const handleRoomChange = (e, index) => {
-    const updatedRooms = [...rooms];
-    updatedRooms[index] = e.target.value;
-    setRooms(updatedRooms);
-  };
-
-  // Remove a room from the list
-  const removeRoom = (index) => {
-    const updatedRooms = [...rooms];
-    updatedRooms.splice(index, 1);
-    setRooms(updatedRooms);
-  };
-
   // Handle form submission
   const onSubmit = async (formData) => {
     console.log("Form data:", formData);
@@ -88,7 +66,7 @@ const ScheduleForm = () => {
       subject: formData.subject.value, // Use `value` for the selected subject
       date: formData.date,
       shift: formData.shift,
-      rooms: rooms, // Use local state for rooms
+      rooms: rooms.map((room) => room.value), // Extract room values for submission
       standard: formData.standard,
     };
 
@@ -138,44 +116,13 @@ const ScheduleForm = () => {
           error={errors.shift}
         />
 
-
         {/* Rooms Section */}
         <div>
           <label className="block mb-2">Rooms</label>
-          {rooms.map((room, index) => (
-            <div key={index} className="flex items-center space-x-2 mb-2">
-              <input
-                type="text"
-                {...register(`rooms.${index}`, { required: "Room cannot be empty" })}
-                value={room}
-                onChange={(e) => handleRoomChange(e, index)}
-                className="border rounded px-2 py-1 w-full"
-              />
-              <button
-                type="button"
-                onClick={() => removeRoom(index)}
-                className="px-2 py-1 bg-red-600 text-white rounded"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <div className="flex items-center space-x-2 mt-2">
-            <input
-              type="text"
-              value={newRoom}
-              onChange={(e) => setNewRoom(e.target.value)}
-              className="border rounded px-2 py-1 w-full"
-              placeholder="Add a room"
-            />
-            <button
-              type="button"
-              onClick={addRoom}
-              className="px-3 py-1 bg-blue-600 text-white rounded"
-            >
-              Add
-            </button>
-          </div>
+          <RoomSelectWithAddOption
+            onRoomsChange={(selectedRooms) => setRooms(selectedRooms)} // Update state with selected rooms
+            placeholder="Add or select rooms..."
+          />
         </div>
 
         <InputField label="Standard" type="text" register={register("standard")} />

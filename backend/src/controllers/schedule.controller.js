@@ -5,16 +5,48 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const addExamDate = asyncHandler(async (req, res) => {
   const { subject, date, shift, rooms, standard } = req.body;
-  if (!subject || !date || !shift || !rooms) {
-    throw new ApiError(400, "All fields are required");
+
+  // Validate required fields
+  if (!subject || !date || !shift || !rooms?.length) {
+    return res.status(400).json({
+      status: "error",
+      message: "All fields are required.",
+      missingFields: {
+        subject: !subject ? "Subject is missing" : undefined,
+        date: !date ? "Date is missing" : undefined,
+        shift: !shift ? "Shift is missing" : undefined,
+        rooms: !rooms?.length ? "Rooms are missing" : undefined,
+      },
+    });
   }
 
+  // Validate shift value
+  if (!["Morning", "Evening"].includes(shift)) {
+    return res.status(400).json({
+      status: "error",
+      message:
+        "Invalid shift value. Allowed values are 'Morning' or 'Evening'.",
+    });
+  }
+
+  // Validate rooms uniqueness
+  const duplicateRooms = await ExamSchedule.find({ rooms: { $in: rooms } });
+  if (duplicateRooms.length > 0) {
+    return res.status(400).json({
+      status: "error",
+      message: "One or more rooms are already assigned to another exam.",
+      duplicateRooms,
+    });
+  }
+
+  // Check if exam schedule already exists for the same subject, date, and shift
   const examScheduleExists = await ExamSchedule.findOne({
-    $and: [{ subject, date, shift }],
+    $and: [{ subject }, { date }, { shift }],
   });
   if (examScheduleExists) {
     throw new ApiError(409, "This exam already exists");
   }
+
   // Save the exam schedule to the database
   const createdExamSchedule = await ExamSchedule.create({
     subject,
@@ -23,25 +55,16 @@ const addExamDate = asyncHandler(async (req, res) => {
     rooms,
     standard,
   });
-  // Send back a response indicating success
-  const newExamScheduleData = await ExamSchedule.findById(
-    createdExamSchedule._id
-  );
-  if (!newExamScheduleData) {
-    throw new ApiError(
-      500,
-      "Something went wrong while adding exam schedule data"
-    );
+
+  if (!createdExamSchedule) {
+    throw new ApiError(500, "Failed to create exam schedule");
   }
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        200,
-        newExamScheduleData,
-        "Exam schedule added successfully"
-      )
-    );
+
+  return res.status(201).json({
+    status: "success",
+    data: createdExamSchedule,
+    message: "Exam schedule added successfully",
+  });
 });
 
 // Function to get all exam schedules
