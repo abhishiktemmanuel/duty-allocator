@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import InputField from "../form-components/InputField.jsx";
 import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx";
-import RoomSelectWithAddOption from "../form-components/RoomSelectWithAddOptions.jsx"; // Import new component
+import InputWithAddOption from "../form-components/InputWithAddOption.jsx"; // Import new component
 import { fetchSubjects, addSubject, submitSchedule } from "../../services/backendApi.js";
 import SelectDropdown from "../form-components/SelectDropdown.jsx";
 
@@ -119,7 +119,7 @@ const ScheduleForm = () => {
         {/* Rooms Section */}
         <div>
           <label className="block mb-2">Rooms</label>
-          <RoomSelectWithAddOption
+          <InputWithAddOption
             onRoomsChange={(selectedRooms) => setRooms(selectedRooms)} // Update state with selected rooms
             placeholder="Add or select rooms..."
           />
