@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import PropTypes from 'prop-types';
 import Table from "../table-components/Table";
 import Loader from "../Loader";
 import { fetchTeachers } from "../../services/backendApi";
@@ -14,7 +13,6 @@ const TeacherTable = () => {
       try {
         const data = await fetchTeachers();
         setTeachers(data);
-        console.log(data);
       } catch (err) {
         setError(`Failed to load teacher data: ${err.message}`);
       } finally {

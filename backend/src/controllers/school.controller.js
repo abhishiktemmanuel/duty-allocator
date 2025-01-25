@@ -5,22 +5,30 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerSchool = asyncHandler(async (req, res) => {
   const { name } = req.body;
+
+  // Validate input
   if (!name) {
     throw new ApiError(400, "School name is required");
   }
 
+  // Check if school already exists
   const schoolExists = await School.findOne({ name });
   if (schoolExists) {
     throw new ApiError(409, "School already exists");
   }
+
+  // Create new school
   const school = await School.create({ name });
-  const newSchoolData = await School.findById(school._id);
-  if (!newSchoolData) {
-    throw new ApiError(500, "Something went wrong while adding school data");
-  }
-  return res
-    .status(201)
-    .json(new ApiResponse(200, newSchoolData, "School added successfully"));
+
+  // Return success response with new school data
+  return res.status(201).json({
+    status: "success",
+    data: {
+      _id: school._id,
+      name: school.name,
+    },
+    message: "School added successfully",
+  });
 });
 
 // Function to get all schools

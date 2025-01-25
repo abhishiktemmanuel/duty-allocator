@@ -5,22 +5,30 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerSubject = asyncHandler(async (req, res) => {
   const { name } = req.body;
+
+  // Validate input
   if (!name) {
     throw new ApiError(400, "Subject name is required");
   }
 
+  // Check if subject already exists
   const subjectExists = await Subject.findOne({ name });
   if (subjectExists) {
     throw new ApiError(409, "Subject already exists");
   }
+
+  // Create new subject
   const subject = await Subject.create({ name });
-  const newSubjectData = await Subject.findById(subject._id);
-  if (!newSubjectData) {
-    throw new ApiError(500, "Something went wrong while adding subject data");
-  }
-  return res
-    .status(201)
-    .json(new ApiResponse(200, newSubjectData, "Subject added successfully"));
+
+  // Return success response with new subject data
+  return res.status(201).json({
+    status: "success",
+    data: {
+      _id: subject._id,
+      name: subject.name,
+    },
+    message: "Subject added successfully",
+  });
 });
 
 // Function to get all subjects
