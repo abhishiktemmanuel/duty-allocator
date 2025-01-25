@@ -113,7 +113,7 @@ const ScheduleForm = () => {
         {/* Subject Section */}
         <SingleSelectWithAddOption
           options={subjects}
-          placeholder="Select or create a subject"
+          placeholder="Select subject"
           onOptionCreate={handleAddSubject}
           onSelectionChange={(selectedOption) => setValue("subject", selectedOption)}
         />

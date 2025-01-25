@@ -123,7 +123,7 @@ const TeacherForm = () => {
         {/* Schools Dropdown */}
         <SingleSelectWithAddOption
           options={schools}
-          placeholder="Select or create a school"
+          placeholder="Select school"
           onOptionCreate={handleAddSchool}
           onSelectionChange={(selectedOption) => setValue("school", selectedOption)}
         />
