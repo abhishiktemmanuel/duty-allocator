@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import InputField from "../form-components/InputField.jsx";
-import SelectDropdown from "../form-components/SelectDropdown.jsx";
+import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx"; // Use the new component
 import { fetchSubjects, addSubject, submitSchedule } from "../../services/backendApi.js";
 
 const ScheduleForm = () => {
@@ -14,12 +14,10 @@ const ScheduleForm = () => {
   } = useForm();
 
   const [subjects, setSubjects] = useState([]);
-  const [showNewSubjectInput, setShowNewSubjectInput] = useState(false);
-  const [newSubject, setNewSubject] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [rooms, setRooms] = useState([]);
   const [newRoom, setNewRoom] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Fetch subjects on component mount
   useEffect(() => {
@@ -27,7 +25,11 @@ const ScheduleForm = () => {
       setLoading(true);
       try {
         const subjectsData = await fetchSubjects();
-        setSubjects([...subjectsData, { _id: "other", name: "Other" }]);
+        const formattedSubjects = subjectsData.map((sub) => ({
+          label: sub.name,
+          value: sub._id,
+        }));
+        setSubjects(formattedSubjects);
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
         setErrorMessage("Could not load subjects at this time.");
@@ -37,6 +39,23 @@ const ScheduleForm = () => {
     };
     loadSubjects();
   }, []);
+
+  // Handle adding a new subject
+  const handleAddSubject = async (newSubject) => {
+    try {
+      const addedSubject = await addSubject(newSubject.label);
+      if (!addedSubject || !addedSubject.name || !addedSubject._id) {
+        throw new Error("Invalid response from addSubject");
+      }
+      setSubjects((prevSubjects) => [
+        ...prevSubjects,
+        { label: addedSubject.name, value: addedSubject._id },
+      ]);
+    } catch (error) {
+      console.error("Failed to add subject:", error);
+      alert(error.message || "Failed to add new subject. Please try again later.");
+    }
+  };
 
   // Add a new room to the list
   const addRoom = () => {
@@ -65,7 +84,7 @@ const ScheduleForm = () => {
     console.log("Form data:", formData);
 
     const payload = {
-      subject: formData.subject,
+      subject: formData.subject.value, // Use `value` for the selected subject
       date: formData.date,
       shift: formData.shift,
       rooms: rooms, // Use local state for rooms
@@ -91,38 +110,13 @@ const ScheduleForm = () => {
       {errorMessage && <p className="text-center text-red-600 mb-4">{errorMessage}</p>}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <SelectDropdown
-          label="Subject"
+        {/* Subject Section */}
+        <SingleSelectWithAddOption
           options={subjects}
-          register={register("subject", { required: "Please select subject" })}
-          onChange={(e) => {
-            setValue("subject", e.target.value);
-            setShowNewSubjectInput(e.target.value === "other");
-          }}
-          error={errors.subject}
+          placeholder="Select or create a subject"
+          onOptionCreate={handleAddSubject}
+          onSelectionChange={(selectedOption) => setValue("subject", selectedOption)}
         />
-
-        {showNewSubjectInput && (
-          <div className="mt-4 flex items-center space-x-2">
-            <InputField
-              label=""
-              type="text"
-              value={newSubject}
-              onChange={(e) => setNewSubject(e.target.value)}
-              placeholder="Add new subject"
-            />
-            <button
-              type="button"
-              onClick={async () => {
-                await addSubject(newSubject);
-                setShowNewSubjectInput(false);
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
-            >
-              Add Subject
-            </button>
-          </div>
-        )}
 
         <InputField
           label="Date"
@@ -131,14 +125,13 @@ const ScheduleForm = () => {
           error={errors.date}
         />
 
-        <SelectDropdown
-          label="Shift"
+        <SingleSelectWithAddOption
           options={[
-            { _id: "Morning", name: "Morning" },
-            { _id: "Evening", name: "Evening" },
+            { label: "Morning", value: "Morning" },
+            { label: "Evening", value: "Evening" },
           ]}
-          register={register("shift", { required: "Please select a shift" })}
-          error={errors.shift}
+          placeholder="Select shift"
+          onSelectionChange={(selectedOption) => setValue("shift", selectedOption)}
         />
 
         {/* Rooms Section */}
