@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@apptane/react-ui-badge": "^2.0.2",
+    "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.0.0",
+    "@tanstack/react-table": "^8.20.6",
     "axios": "^1.7.9",
     "multiselect-react-dropdown": "^2.0.25",
     "prop-types": "^15.8.1",

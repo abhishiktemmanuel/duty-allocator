@@ -26,3 +26,7 @@ export const fetchTeachers = async () => {
   const response = await axios.get("/api/v1/teachers/getteachers");
   return response.data.message;
 };
+
+export const submitSchedule = async (payload) => {
+  await axios.post("/api/v1/schedules/addexam", payload);
+};

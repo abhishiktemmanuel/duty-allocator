@@ -14,6 +14,7 @@ const TeacherTable = () => {
       try {
         const data = await fetchTeachers();
         setTeachers(data);
+        console.log(data);
       } catch (err) {
         setError(`Failed to load teacher data: ${err.message}`);
       } finally {

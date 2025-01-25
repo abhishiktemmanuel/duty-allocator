@@ -34,10 +34,15 @@ const registerTeacher = asyncHandler(async (req, res) => {
 
 // Function to get all teachers
 const getAllTeachers = asyncHandler(async (req, res) => {
-  const teachers = await Teacher.find({});
+  // Fetch teachers and populate 'subjects' and 'school' with their 'name' fields
+  const teachers = await Teacher.find({})
+    .populate({ path: "subjects", select: "name" }) // Populate subjects with only their name
+    .populate({ path: "school", select: "name" }); // Populate school with only its name
+
   if (!teachers || teachers.length === 0) {
     throw new ApiError(404, "No teachers found");
   }
+
   return res
     .status(200)
     .json(new ApiResponse(200, teachers, "Teachers retrieved successfully"));
