@@ -1,38 +1,66 @@
 import './App.css';
 import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Sidebar from './components/global-components/Sidebar'; // Import Sidebar
 import Teachers from './components/pages/Teachers';
 import Schedule from './components/pages/Schedule';
 import Register from './components/auth/Register';
 import Login from './components/auth/Login';
-import Logout from './components/auth/Logout';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token')); // Manage authentication state
+
+  // Define navigation links for authenticated users
+  const links = [
+    { path: '/teachers', label: 'Teachers' },
+    { path: '/schedule', label: 'Schedule' },
+  ];
 
   return (
     <div className="App">
       {!token ? (
         // If user is not logged in, show Register and Login components
         <>
-          <h1>Welcome! Please Register or Login</h1>
-          <Register />
-          <Login setToken={(newToken) => {
-            localStorage.setItem('token', newToken); // Save token to localStorage
-            setToken(newToken); // Update token state
-          }} />
+          <Routes>
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/login"
+              element={
+                <Login
+                  setToken={(newToken) => {
+                    localStorage.setItem('token', newToken); // Save token to localStorage
+                    setToken(newToken); // Update token state
+                  }}
+                />
+              }
+            />
+            {/* Redirect to login if no route matches */}
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
         </>
       ) : (
-        // If user is logged in, show authenticated components and Logout button
-        <>
-          <h1>Welcome Back!</h1>
-          <Logout setToken={() => {
-            localStorage.removeItem('token'); // Remove token from localStorage
-            setToken(null); // Clear token state
-          }} />
-          {/* Authenticated pages */}
-          <Teachers />
-          <Schedule />
-        </>
+        // If user is logged in, show authenticated components with Sidebar and Logout
+        <div className="flex">
+          {/* Sidebar Component */}
+          <Sidebar
+            links={links}
+            brand="My App"
+            onLogout={() => {
+              localStorage.removeItem('token'); // Remove token from localStorage
+              setToken(null); // Clear token state
+            }}
+          />
+
+          {/* Main Content */}
+          <div className="ml-64 flex-1 p-8">
+            <Routes>
+              <Route path="/teachers" element={<Teachers />} />
+              <Route path="/schedule" element={<Schedule />} />
+              {/* Redirect to Teachers page if no route matches */}
+              <Route path="*" element={<Navigate to="/teachers" />} />
+            </Routes>
+          </div>
+        </div>
       )}
     </div>
   );

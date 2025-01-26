@@ -11,8 +11,6 @@ API.interceptors.request.use(
     // Retrieve token and organization ID from localStorage
     const token = localStorage.getItem("token");
     const organizationId = localStorage.getItem("organizationId");
-    console.log("token", token);
-    console.log("organizationId", organizationId);
     // Add Authorization header if token exists
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

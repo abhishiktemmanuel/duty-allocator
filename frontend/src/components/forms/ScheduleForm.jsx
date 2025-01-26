@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import InputField from "../form-components/InputField.jsx";
 import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx";
-import InputWithAddOption from "../form-components/InputWithAddOption.jsx"; // Import new component
+import InputWithAddOption from "../form-components/InputWithAddOption.jsx";
 import { fetchSubjects, addSubject, submitSchedule } from "../../services/backendApi.js";
-import SelectDropdown from "../form-components/SelectDropdown.jsx";
 
 const ScheduleForm = () => {
   const {
@@ -16,7 +15,7 @@ const ScheduleForm = () => {
   } = useForm();
 
   const [subjects, setSubjects] = useState([]);
-  const [rooms, setRooms] = useState([]); // Updated to store room objects
+  const [rooms, setRooms] = useState([]); // Store room objects
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -26,11 +25,7 @@ const ScheduleForm = () => {
       setLoading(true);
       try {
         const subjectsData = await fetchSubjects();
-        const formattedSubjects = subjectsData.map((sub) => ({
-          label: sub.name,
-          value: sub._id,
-        }));
-        setSubjects(formattedSubjects);
+        setSubjects(subjectsData.map((sub) => ({ label: sub.name, value: sub._id })));
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
         setErrorMessage("Could not load subjects at this time.");
@@ -60,17 +55,13 @@ const ScheduleForm = () => {
 
   // Handle form submission
   const onSubmit = async (formData) => {
-    console.log("Form data:", formData);
-
     const payload = {
-      subject: formData.subject.value, // Use `value` for the selected subject
+      subject: formData.subject.value,
       date: formData.date,
       shift: formData.shift,
-      rooms: rooms.map((room) => room.value), // Extract room values for submission
+      rooms: rooms.map((room) => room.value),
       standard: formData.standard,
     };
-
-    console.log("Payload:", payload);
 
     try {
       await submitSchedule(payload);
@@ -84,52 +75,96 @@ const ScheduleForm = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-md">
-      {loading && <p className="text-center text-blue-600">Loading...</p>}
-      {errorMessage && <p className="text-center text-red-600 mb-4">{errorMessage}</p>}
+    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl">
+      {loading && (
+        <p className="text-center text-blue-500 font-semibold mb-4">
+          Loading...
+        </p>
+      )}
+      {errorMessage && (
+        <div className="mb-4 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg">
+          {errorMessage}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Subject Section */}
-        <SingleSelectWithAddOption
-          options={subjects}
-          placeholder="Select subject"
-          onOptionCreate={handleAddSubject}
-          onSelectionChange={(selectedOption) => setValue("subject", selectedOption)}
-        />
-
-        <InputField
-          label="Date"
-          type="date"
-          register={register("date", { required: "Please select a date" })}
-          error={errors.date}
-        />
-
-        <SelectDropdown
-          label="Shift"
-          options={[
-            { _id: "Morning", name: "Morning" },
-            { _id: "Evening", name: "Evening" },
-          ]}
-          register={register("shift", {
-            required: "Please select a shift",
-          })}
-          error={errors.shift}
-        />
-
-        {/* Rooms Section */}
+        {/* Subject Section - Full Length */}
         <div>
-          <label className="block mb-2">Rooms</label>
-          <InputWithAddOption
-            onRoomsChange={(selectedRooms) => setRooms(selectedRooms)} // Update state with selected rooms
-            placeholder="Add or select rooms..."
+          <SingleSelectWithAddOption
+            options={subjects}
+            placeholder="Select subject"
+            onOptionCreate={handleAddSubject}
+            onSelectionChange={(selectedOption) => setValue("subject", selectedOption)}
           />
         </div>
 
-        <InputField label="Standard" type="text" register={register("standard")} />
+        {/* Date, Shift, and Standard Fields */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Date Field */}
+          <InputField
+            id="scheduleDate"
+            type="date"
+            register={register("date", { required: "Please select a date" })}
+            error={errors.date}
+            placeholder="Select date"
+            className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 text-left indent-2 border-radius-[20rem]
+                      focus:ring-blue-500 focus:border-blue-500 block w-full"
+          />
+          {errors.date && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.date.message}
+            </p>
+          )}
 
-        <button type="submit" className="w-full py-2 px-4 bg-green-600 text-white rounded-md shadow hover:bg-green-700">
-          Submit
-        </button>
+          {/* Shift Dropdown */}
+          <div>
+            
+            <select
+              id="shift"
+              {...register("shift", { required: "Please select a shift" })}
+              className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 indent-2 focus:ring-blue-500 focus:border-blue-500 block w-full"
+            >
+              <option value="" disabled>
+                Select shift
+              </option>
+              <option value="Morning">Morning</option>
+              <option value="Evening">Evening</option>
+            </select>
+            {errors.shift && (
+              <p className="mt-1 text-sm text-red-600">{errors.shift.message}</p>
+            )}
+          </div>
+
+          {/* Standard Field */}
+          <InputField
+            id="scheduleStandard"
+            type="text"
+            register={register("standard")}
+            placeholder="Enter standard"
+            className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 text-left indent-2 border-radius-[20rem]
+                      focus:ring-blue-500 focus:border-blue-500 block w-full"
+          />
+        </div>
+
+        {/* Rooms and Submit Button */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-end">
+          {/* Rooms Section */}
+          <div>
+            <label className="block mb-2">Rooms</label>
+            <InputWithAddOption
+              onRoomsChange={(selectedRooms) => setRooms(selectedRooms)}
+              placeholder="Add or select rooms..."
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          >
+            Submit
+          </button>
+        </div>
       </form>
     </div>
   );

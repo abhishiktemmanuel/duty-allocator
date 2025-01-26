@@ -1,33 +1,31 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { XIcon } from "lucide-react";
-import { forwardRef, useState } from "react";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { XIcon } from 'lucide-react';
+import { forwardRef, useState } from 'react';
 import PropTypes from 'prop-types';
 
-export const InputTags = forwardRef((props, ref) => {
-  const { value, onChange, ...rest } = props;
-  const [pendingDataPoint, setPendingDataPoint] = useState("");
+export const InputTags = forwardRef(({ value, onChange, ...rest }, ref) => {
+  const [pendingTag, setPendingTag] = useState('');
 
-  const addPendingDataPoint = () => {
-    if (pendingDataPoint) {
-      const newDataPoints = new Set([...value, pendingDataPoint]);
-      onChange(Array.from(newDataPoints));
-      setPendingDataPoint("");
+  const addTag = () => {
+    if (pendingTag) {
+      const newTags = [...value, pendingTag];
+      onChange(newTags);
+      setPendingTag('');
     }
   };
 
   return (
     <>
-      {/* Input and Add Button */}
       <div className="flex">
         <Input
-          value={pendingDataPoint}
-          onChange={(e) => setPendingDataPoint(e.target.value)}
+          value={pendingTag}
+          onChange={(e) => setPendingTag(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === "," || e.key === " ") {
+            if (e.key === 'Enter') {
               e.preventDefault();
-              addPendingDataPoint();
+              addTag();
             }
           }}
           className="rounded-r-none"
@@ -38,25 +36,22 @@ export const InputTags = forwardRef((props, ref) => {
           type="button"
           variant="secondary"
           className="rounded-l-none border border-l-0"
-          onClick={addPendingDataPoint}
+          onClick={addTag}
         >
           Add
         </Button>
       </div>
 
-      {/* Tags Display */}
-      <div className="border rounded-md min-h-[2.5rem] overflow-y-auto p-2 flex gap-2 flex-wrap items-center">
-        {value.map((item, idx) => (
-          <Badge key={idx} variant="secondary">
-            {item}
+      <div className="border rounded-md min-h-[2.5rem] p-2 flex gap-2 flex-wrap items-center mt-2">
+        {value.map((tag, index) => (
+          <Badge key={index} variant="secondary" className="flex items-center gap-1">
+            {tag}
             <button
               type="button"
-              className="w-3 ml-2"
-              onClick={() => {
-                onChange(value.filter((i) => i !== item));
-              }}
+              onClick={() => onChange(value.filter((t) => t !== tag))}
+              className="focus:outline-none"
             >
-              <XIcon className="w-3" />
+              <XIcon className="w-3 h-3" />
             </button>
           </Badge>
         ))}
@@ -64,10 +59,9 @@ export const InputTags = forwardRef((props, ref) => {
     </>
   );
 });
-InputTags.displayName = "InputTags";
 
 InputTags.propTypes = {
   value: PropTypes.array.isRequired,
-  onChange: PropTypes.func.isRequired
+  onChange: PropTypes.func.isRequired,
 };
-InputTags.displayName = "InputTags";
+InputTags.displayName = 'InputTags';

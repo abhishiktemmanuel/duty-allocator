@@ -1,43 +1,40 @@
-import { useState } from "react";
-import CreatableSelect from "react-select/creatable";
-import PropTypes from "prop-types";
+import { useState } from 'react';
+import CreatableSelect from 'react-select/creatable';
+import PropTypes from 'prop-types';
 
-const InputWithAddOption = ({
-  onInputsChange, // Callback to notify parent about input changes
-  placeholder = "Add or select inputs...", // Customizable placeholder
-}) => {
-  const [inputs, setInputs] = useState([]); // Local state for inputs
+const InputWithAddOption = ({ onInputsChange, placeholder = 'Add or select inputs...' }) => {
+  const [inputs, setInputs] = useState([]);
 
-  // Handle adding a new input
   const handleCreateInput = (inputValue) => {
     const newInput = { label: inputValue, value: inputValue };
-    setInputs((prevInputs) => [...prevInputs, newInput]);
-
-    // Notify parent about the updated inputs
-    if (onInputsChange) {
-      onInputsChange([...inputs, newInput]);
-    }
+    setInputs((prev) => [...prev, newInput]);
+    if (onInputsChange) onInputsChange([...inputs, newInput]);
   };
 
-  // Handle selection changes
   const handleChange = (selected) => {
-    setInputs(selected || []); // Update local state with selected inputs
-
-    // Notify parent about the updated inputs
-    if (onInputsChange) {
-      onInputsChange(selected || []);
-    }
+    setInputs(selected || []);
+    if (onInputsChange) onInputsChange(selected || []);
   };
 
   return (
-    <div style={{ width: "100%", margin: "0 auto" }}>
+    <div className="w-full">
       <CreatableSelect
         isMulti
-        options={inputs} // Use the current list of inputs as options
+        options={inputs}
         value={inputs}
         onChange={handleChange}
         onCreateOption={handleCreateInput}
         placeholder={placeholder}
+        className="text-gray-800"
+        styles={{
+          control: (base) => ({
+            ...base,
+            borderRadius: '0.375rem',
+            borderColor: '#d1d5db',
+            boxShadow: 'none',
+            '&:hover': { borderColor: '#3b82f6' },
+          }),
+        }}
       />
     </div>
   );

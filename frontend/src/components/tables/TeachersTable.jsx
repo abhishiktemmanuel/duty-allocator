@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Table from "../table-components/Table";
-import Loader from "../Loader";
+import Loader from "../global-components/Loader";
 import { fetchTeachers } from "../../services/backendApi";
 
 const TeacherTable = () => {
