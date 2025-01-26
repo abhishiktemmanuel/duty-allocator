@@ -1,8 +1,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { School } from "../models/school.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+// Register a new school
 const registerSchool = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
@@ -10,6 +10,9 @@ const registerSchool = asyncHandler(async (req, res) => {
   if (!name) {
     throw new ApiError(400, "School name is required");
   }
+
+  // Use dynamically compiled School model from req.models
+  const School = req.models.School;
 
   // Check if school already exists
   const schoolExists = await School.findOne({ name });
@@ -33,10 +36,14 @@ const registerSchool = asyncHandler(async (req, res) => {
 
 // Function to get all schools
 const getAllSchools = asyncHandler(async (req, res) => {
+  // Use dynamically compiled School model from req.models
+  const School = req.models.School;
+
   const schools = await School.find({});
   if (!schools || schools.length === 0) {
     throw new ApiError(404, "No schools found");
   }
+
   return res
     .status(200)
     .json(new ApiResponse(200, schools, "Schools retrieved successfully"));

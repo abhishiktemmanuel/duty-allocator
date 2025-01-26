@@ -1,8 +1,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ExamSchedule } from "../models/examSchedule.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+// Add a new exam schedule
 const addExamDate = asyncHandler(async (req, res) => {
   const { subject, date, shift, rooms, standard } = req.body;
 
@@ -28,6 +28,9 @@ const addExamDate = asyncHandler(async (req, res) => {
         "Invalid shift value. Allowed values are 'Morning' or 'Evening'.",
     });
   }
+
+  // Use dynamically compiled ExamSchedule model from req.models
+  const ExamSchedule = req.models.ExamSchedule;
 
   // Validate rooms uniqueness
   const duplicateRooms = await ExamSchedule.find({ rooms: { $in: rooms } });
@@ -69,10 +72,14 @@ const addExamDate = asyncHandler(async (req, res) => {
 
 // Function to get all exam schedules
 const getAllExamSchedules = asyncHandler(async (req, res) => {
+  // Use dynamically compiled ExamSchedule model from req.models
+  const ExamSchedule = req.models.ExamSchedule;
+
   const examSchedules = await ExamSchedule.find({});
   if (!examSchedules || examSchedules.length === 0) {
     throw new ApiError(404, "No exam schedules found");
   }
+
   return res
     .status(200)
     .json(

@@ -2,15 +2,18 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-import { Duty } from "../models/duty.model.js";
-import { Teacher } from "../models/teacher.model.js";
-import { getSchedule } from "../services/getSchedule.js";
-import { getAllTeachers } from "../services/getAllTeachers.js";
-
 export const dutySetter = asyncHandler(async (req, res) => {
   try {
-    const teachers = await getAllTeachers();
-    const examSchedules = await getSchedule();
+    // Use dynamically compiled models from req.models
+    const Duty = req.models.Duty;
+    const Teacher = req.models.Teacher;
+
+    // Use services with dynamically compiled models
+    const teachers = await req.services.getAllTeachers(req.models.Teacher);
+    const examSchedules = await req.services.getSchedule(
+      req.models.ExamSchedule
+    );
+
     let tempTeachers = [...teachers];
 
     const meetsFullCriteria = (teacher, exam, alreadyChosen) => {

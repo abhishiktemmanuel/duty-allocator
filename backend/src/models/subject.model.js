@@ -5,6 +5,8 @@ const SubjectSchema = new mongoose.Schema({
     required: true,
     unique: true,
     lowercase: true,
+    trim: true,
+    index: true,
   },
 });
 
