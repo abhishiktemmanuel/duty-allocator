@@ -49,10 +49,8 @@ const TeacherTable = () => {
   if (error) return <p className="text-red-600 text-center">{error}</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-md">
-      <h1 className="text-xl font-bold mb-4">Teacher Details</h1>
-      <Table columns={columns} data={teachers} />
-    </div>
+    <Table columns={columns} data={teachers} />
+    
   );
 };
 
