@@ -18,12 +18,12 @@ const SingleSelectWithAddOption = ({
     setOptions(initialOptions);
   }, [initialOptions]);
 
-  const handleCreateOption = (inputValue) => {
-    const newOption = { label: inputValue, value: inputValue };
-    console.log(newOption);
-    setOptions((prevOptions) => [...prevOptions, newOption]);
-    setSelectedOption(newOption);
-    if (onOptionCreate) onOptionCreate(newOption);
+  const handleCreateOption = async (inputValue) => {
+    if (onOptionCreate) {
+      const createdOption = await onOptionCreate({ label: inputValue });
+      setOptions((prev) => [...prev, createdOption]);
+      setSelectedOption(createdOption);
+    }
   };
 
   const handleChange = (option) => {

@@ -17,8 +17,9 @@ const TeacherForm = () => {
     handleSubmit,
     reset,
     setValue,
-    formState: { errors },
-  } = useForm();
+    getValues,
+    formState: { errors }
+  } = useForm()
   const [subjects, setSubjects] = useState([]);
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,6 @@ const TeacherForm = () => {
   }, []);
 
   const onSubmit = async (formData) => {
-    console.log(formData);
     const payload = {
       name: formData.name,
       subjects: formData.subjects.map((sub) => sub.value),
@@ -63,22 +63,35 @@ const TeacherForm = () => {
   const handleAddSubject = async (newSubject) => {
     try {
       const addedSubject = await addSubject(newSubject.label);
-      setSubjects((prevSubjects) => [...prevSubjects, { label: addedSubject.name, value: addedSubject._id }]);
+      const newOption = { label: addedSubject.name, value: addedSubject._id };
+      setSubjects((prevSubjects) => [...prevSubjects, newOption]);
+      // Get current subjects from the form
+      const currentSubjects = Array.isArray(getValues("subjects")) ? getValues("subjects") : [];
+      // Update the form value with the new subject added to existing ones
+      setValue("subjects", [...currentSubjects, newOption]);
+      return newOption;
     } catch (error) {
       console.error("Failed to add subject:", error);
       alert("Failed to add new subject. Please try again later.");
     }
   };
-
+  
   const handleAddSchool = async (newSchool) => {
     try {
       const addedSchool = await addSchool(newSchool.label);
-      setSchools((prevSchools) => [...prevSchools, { label: addedSchool.name, value: addedSchool._id }]);
+      const fullOption = { label: addedSchool.name, value: addedSchool._id };
+      setSchools((prev) => [...prev, fullOption]);
+      // Update the form value with the new school
+      setValue("school", fullOption);
+      return fullOption;
     } catch (error) {
       console.error("Failed to add school:", error);
       alert("Failed to add new school. Please try again later.");
+      return null;
     }
   };
+  
+
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl">

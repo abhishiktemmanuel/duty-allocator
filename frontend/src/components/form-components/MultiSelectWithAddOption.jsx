@@ -15,12 +15,13 @@ const MultiSelectWithAddOption = ({
     setOptions(initialOptions);
   }, [initialOptions]);
 
-  const handleCreateOption = (inputValue) => {
-    const newOption = { label: inputValue, value: inputValue };
-    console.log(newOption);
-    setOptions((prev) => [...prev, newOption]);
-    setSelectedOptions((prev) => [...prev, newOption]);
-    if (onOptionCreate) onOptionCreate(newOption);
+  const handleCreateOption = async (inputValue) => {
+    // Ask the parent to create the subject and return its ID
+    if (onOptionCreate) {
+      const createdOption = await onOptionCreate({ label: inputValue });
+      setOptions((prev) => [...prev, createdOption]);
+      setSelectedOptions((prev) => [...prev, createdOption]);
+    }
   };
 
   const handleChange = (selected) => {
