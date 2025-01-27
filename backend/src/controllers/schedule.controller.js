@@ -32,16 +32,6 @@ const addExamDate = asyncHandler(async (req, res) => {
   // Use dynamically compiled ExamSchedule model from req.models
   const ExamSchedule = req.models.ExamSchedule;
 
-  // Validate rooms uniqueness
-  const duplicateRooms = await ExamSchedule.find({ rooms: { $in: rooms } });
-  if (duplicateRooms.length > 0) {
-    return res.status(400).json({
-      status: "error",
-      message: "One or more rooms are already assigned to another exam.",
-      duplicateRooms,
-    });
-  }
-
   // Check if exam schedule already exists for the same subject, date, and shift
   const examScheduleExists = await ExamSchedule.findOne({
     $and: [{ subject }, { date }, { shift }],
@@ -86,9 +76,6 @@ const getAllExamSchedules = asyncHandler(async (req, res) => {
   if (!examSchedules || examSchedules.length === 0) {
     throw new ApiError(404, "No exam schedules found");
   }
-
-  // Debug log to check the populated data
-  console.log("Populated schedules:", JSON.stringify(examSchedules, null, 2));
 
   return res
     .status(200)

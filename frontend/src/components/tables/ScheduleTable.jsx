@@ -12,7 +12,6 @@ const ScheduleTable = () => {
       try {
         const response = await fetchExamSchedules();
         // Ensure we're setting an array from the response
-        console.log('response:', response);
         setSchedules(response.message || []);
         setLoading(false);
       } catch (err) {
