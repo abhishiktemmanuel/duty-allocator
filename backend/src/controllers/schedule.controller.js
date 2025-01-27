@@ -72,13 +72,23 @@ const addExamDate = asyncHandler(async (req, res) => {
 
 // Function to get all exam schedules
 const getAllExamSchedules = asyncHandler(async (req, res) => {
-  // Use dynamically compiled ExamSchedule model from req.models
   const ExamSchedule = req.models.ExamSchedule;
 
-  const examSchedules = await ExamSchedule.find({});
+  const examSchedules = await ExamSchedule.find({})
+    .populate({
+      path: "subject",
+      model: req.models.Subject, // Add this line to explicitly specify the model
+      select: "name",
+    })
+    .sort({ date: -1 }) // Sort by date in descending order
+    .lean(); // Add lean() for better performance
+
   if (!examSchedules || examSchedules.length === 0) {
     throw new ApiError(404, "No exam schedules found");
   }
+
+  // Debug log to check the populated data
+  console.log("Populated schedules:", JSON.stringify(examSchedules, null, 2));
 
   return res
     .status(200)

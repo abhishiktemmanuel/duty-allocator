@@ -2,18 +2,26 @@ import { useState } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import PropTypes from 'prop-types';
 
-const InputWithAddOption = ({ onInputsChange, placeholder = 'Add or select inputs...' }) => {
-  const [inputs, setInputs] = useState([]);
+const InputWithAddOption = ({ onRoomsChange, placeholder = 'Add or select rooms...', value }) => {
+  const [inputs, setInputs] = useState(value || []);
 
   const handleCreateInput = (inputValue) => {
-    const newInput = { label: inputValue, value: inputValue };
-    setInputs((prev) => [...prev, newInput]);
-    if (onInputsChange) onInputsChange([...inputs, newInput]);
+    if (!inputValue.trim()) return;
+    
+    try {
+      const newInput = { label: inputValue, value: inputValue };
+      const updatedInputs = [...inputs, newInput];
+      setInputs(updatedInputs);
+      if (onRoomsChange) onRoomsChange(updatedInputs);
+    } catch (error) {
+      console.error('Error creating room:', error);
+    }
   };
 
   const handleChange = (selected) => {
-    setInputs(selected || []);
-    if (onInputsChange) onInputsChange(selected || []);
+    const updatedInputs = selected || [];
+    setInputs(updatedInputs);
+    if (onRoomsChange) onRoomsChange(updatedInputs);
   };
 
   return (
@@ -41,8 +49,9 @@ const InputWithAddOption = ({ onInputsChange, placeholder = 'Add or select input
 };
 
 InputWithAddOption.propTypes = {
-  onInputsChange: PropTypes.func,
+  onRoomsChange: PropTypes.func,
   placeholder: PropTypes.string,
+  value: PropTypes.array
 };
 
 export default InputWithAddOption;

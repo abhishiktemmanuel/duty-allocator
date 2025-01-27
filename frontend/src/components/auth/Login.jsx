@@ -23,7 +23,6 @@ const Login = ({ setToken }) => {
       localStorage.setItem("token", token); // Store token in local storage
       localStorage.setItem("organizationId", response.organizationId); // Store organizationId in local storage
       setToken(token); // Update token state in App.jsx
-      alert("Login successful!");
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Error logging in");
     } finally {
