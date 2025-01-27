@@ -9,7 +9,6 @@ const Logout = ({ setToken }) => {
   const handleLogout = () => {
     logoutUser(); // Clear token from local storage or backend session
     setToken(null); // Clear token state in App.jsx or Context
-    alert("Logged out successfully!");
     navigate("/login", { replace: true }); // Redirect to login page
   };
 

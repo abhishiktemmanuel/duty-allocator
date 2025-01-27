@@ -26,14 +26,16 @@ API.interceptors.request.use(
 // Authentication APIs
 export const registerUser = async (userData) => {
   try {
-    const response = await API.post("/auth/register", userData);
+    const response = await API.post("/auth/register/admin", userData);
     return response.data.message;
   } catch (error) {
     console.error(
-      "Error registering user:",
+      "Error registering new user:",
       error.response?.data?.message || error.message
     );
-    throw new Error(error.response?.data?.message || "Failed to register user");
+    throw new Error(
+      error.response?.data?.message || "Failed to register new user"
+    );
   }
 };
 
@@ -206,6 +208,46 @@ export const fetchTeachers = async () => {
     );
     throw new Error(
       error.response?.data?.message || "Failed to fetch teachers"
+    );
+  }
+};
+
+export const setDuty = async () => {
+  try {
+    const response = await API.get("/duty/setduty");
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to set duty");
+  }
+};
+
+// Teacher APIs for delete and update
+export const deleteTeacher = async (teacherId) => {
+  try {
+    const response = await API.delete(`/teachers/teacher/${teacherId}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error deleting teacher:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to delete teacher"
+    );
+  }
+};
+
+export const updateTeacher = async (teacherId, payload) => {
+  try {
+    const response = await API.put(`/teachers/teacher/${teacherId}`, payload);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating teacher:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to update teacher"
     );
   }
 };

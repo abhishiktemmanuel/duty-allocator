@@ -19,14 +19,23 @@ const TeacherForm = ({ onTeacherAdded }) => {
     reset,
     setValue,
     getValues,
-    formState: { errors }
-  } = useForm();
+    formState,
+    formState: {  errors, isSubmitSuccessful}
+  } = useForm({
+    defaultValues: {
+      name: '',
+      subjects: [],
+      school: null
+    }
+  });
 
   const [subjects, setSubjects] = useState([]);
   const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [selectedSchool, setSelectedSchool] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,6 +56,18 @@ const TeacherForm = ({ onTeacherAdded }) => {
     loadData();
   }, []);
 
+  useEffect(() => {
+    if (formState.isSubmitSuccessful) {
+      reset({
+        name: '',
+        subjects: [],
+        school: null
+      });
+      setSelectedSubjects([]);
+      setSelectedSchool(null);
+    }
+  }, [formState.isSubmitSuccessful, reset]);
+
   const onSubmit = async (formData) => {
     const payload = {
       name: formData.name,
@@ -56,7 +77,6 @@ const TeacherForm = ({ onTeacherAdded }) => {
 
     try {
       await submitTeacher(payload);
-      reset();
       setSuccessMessage("Teacher added successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
       if (onTeacherAdded) onTeacherAdded();
@@ -100,9 +120,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl">
       {loading && (
-        <p className="text-center text-blue-500 font-semibold mb-4">
-          Loading...
-        </p>
+        <p className="text-center text-blue-500 font-semibold mb-4">Loading...</p>
       )}
 
       {successMessage && (
@@ -130,9 +148,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
                         focus:ring-blue-500 focus:border-blue-500 block w-full"
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.name.message}
-              </p>
+              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
             )}
           </div>
 
@@ -141,7 +157,11 @@ const TeacherForm = ({ onTeacherAdded }) => {
               options={schools}
               placeholder="Select school"
               onOptionCreate={handleAddSchool}
-              onSelectionChange={(selectedOption) => setValue("school", selectedOption)}
+              value={selectedSchool || null}
+              onSelectionChange={(selectedOption) => {
+                setValue("school", selectedOption);
+                setSelectedSchool(selectedOption);
+              }}
             />
           </div>
         </div>
@@ -152,7 +172,11 @@ const TeacherForm = ({ onTeacherAdded }) => {
               options={subjects}
               placeholder="Select subjects"
               onOptionCreate={handleAddSubject}
-              onSelectionChange={(selectedList) => setValue("subjects", selectedList)}
+              value={selectedSubjects || []}
+              onSelectionChange={(selectedList) => {
+                setValue("subjects", selectedList);
+                setSelectedSubjects(selectedList);
+              }}
             />
           </div>
 
@@ -167,6 +191,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
     </div>
   );
 };
+
 TeacherForm.propTypes = {
   onTeacherAdded: PropTypes.func
 };

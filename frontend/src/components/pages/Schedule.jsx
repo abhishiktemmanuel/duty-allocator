@@ -13,7 +13,7 @@ function Schedule() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold text-left pl-2 text-gray-900 mb-2">
-        Schedule Details
+        Exam Schedule
       </h1>
       <ScheduleForm onScheduleAdded={handleScheduleAdded} />
       <ScheduleTable key={refreshKey} />

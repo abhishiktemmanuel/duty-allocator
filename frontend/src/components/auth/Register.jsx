@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // For navigation after registration
+import { useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/backendApi";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: "",
+    name: "",
+    email: "",
     password: "",
-    role: "endUser", // Default role
   });
-  const [loading, setLoading] = useState(false); // Loading state for better UX
-  const [errorMessage, setErrorMessage] = useState(""); // Error message state
-  const navigate = useNavigate(); // Initialize navigate function
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,13 +19,13 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage(""); // Clear previous error messages
+    setErrorMessage("");
     try {
-      await registerUser(formData);
+      const response = await registerUser(formData);
       alert("Registration successful!");
-      navigate("/login"); // Redirect to login page after successful registration
+      navigate("/login");
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || "Error registering user");
+      setErrorMessage(error.response?.data?.message || "Error registering admin");
     } finally {
       setLoading(false);
     }
@@ -35,32 +35,50 @@ const Register = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">
-          Register
+          Admin Registration
         </h2>
 
-        {/* Error Message */}
         {errorMessage && (
           <div className="mb-4 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg">
             {errorMessage}
           </div>
         )}
 
-        {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Username Field */}
+          {/* Name Field */}
           <div>
             <label
-              htmlFor="username"
+              htmlFor="name"
               className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Username
+              Name
             </label>
             <input
               type="text"
-              id="username"
-              name="username"
-              placeholder="Enter your username"
-              value={formData.username}
+              id="name"
+              name="name"
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full px-4 py-2 text-sm text-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          {/* Email Field */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email"
+              value={formData.email}
               onChange={handleChange}
               required
               className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full px-4 py-2 text-sm text-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
@@ -87,28 +105,6 @@ const Register = () => {
             />
           </div>
 
-          {/* Role Dropdown */}
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full px-4 py-[0.6rem] text-sm text-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="endUser">End User</option>
-              <option value="admin">Admin</option>
-              <option value="superAdmin">Super Admin</option>
-            </select>
-          </div>
-
           {/* Submit Button */}
           <button
             type="submit"
@@ -117,7 +113,7 @@ const Register = () => {
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
-            {loading ? "Registering..." : "Register"}
+            {loading ? "Registering..." : "Register as Admin"}
           </button>
         </form>
 

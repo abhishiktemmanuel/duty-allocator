@@ -10,25 +10,33 @@ const SingleSelectWithAddOption = ({
   placeholder = "Select or create an option...",
   defaultValue = null,
   error,
+  value
 }) => {
   const [options, setOptions] = useState(initialOptions);
-  const [selectedOption, setSelectedOption] = useState(defaultValue);
+  const [selectedOption, setSelectedOption] = useState(value || defaultValue);
 
   useEffect(() => {
     setOptions(initialOptions);
   }, [initialOptions]);
+
+  // Add useEffect to sync with external value prop
+  useEffect(() => {
+    setSelectedOption(value || null);
+  }, [value]);
 
   const handleCreateOption = async (inputValue) => {
     if (onOptionCreate) {
       const createdOption = await onOptionCreate({ label: inputValue });
       setOptions((prev) => [...prev, createdOption]);
       setSelectedOption(createdOption);
+      if (onSelectionChange) onSelectionChange(createdOption);
     }
   };
 
   const handleChange = (option) => {
-    setSelectedOption(option);
-    if (onSelectionChange) onSelectionChange(option);
+    const newValue = option || null;
+    setSelectedOption(newValue);
+    if (onSelectionChange) onSelectionChange(newValue);
   };
 
   return (
@@ -45,7 +53,7 @@ const SingleSelectWithAddOption = ({
           onChange={handleChange}
           onCreateOption={handleCreateOption}
           placeholder={placeholder}
-          className="text-gray-800 text-left indent-2 "
+          className="text-gray-800 text-left indent-2"
           styles={{
             control: (base) => ({
               ...base,
@@ -55,6 +63,7 @@ const SingleSelectWithAddOption = ({
               "&:hover": { borderColor: "#3b82f6" },
             }),
           }}
+          isClearable={true}
         />
       </div>
       {error && <p className="mt-1 text-sm text-red-600">{error.message}</p>}
@@ -75,6 +84,7 @@ SingleSelectWithAddOption.propTypes = {
   placeholder: PropTypes.string,
   defaultValue: PropTypes.object,
   error: PropTypes.object,
+  value: PropTypes.object
 };
 
 export default SingleSelectWithAddOption;

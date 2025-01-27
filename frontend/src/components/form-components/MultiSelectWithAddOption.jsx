@@ -7,26 +7,34 @@ const MultiSelectWithAddOption = ({
   onOptionCreate,
   onSelectionChange,
   placeholder = 'Select or create options...',
+  value
 }) => {
   const [options, setOptions] = useState(initialOptions);
-  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState(value || []);
 
   useEffect(() => {
     setOptions(initialOptions);
   }, [initialOptions]);
 
+  // Add this useEffect to sync with external value prop
+  useEffect(() => {
+    setSelectedOptions(value || []);
+  }, [value]);
+
   const handleCreateOption = async (inputValue) => {
-    // Ask the parent to create the subject and return its ID
     if (onOptionCreate) {
       const createdOption = await onOptionCreate({ label: inputValue });
       setOptions((prev) => [...prev, createdOption]);
-      setSelectedOptions((prev) => [...prev, createdOption]);
+      const newSelectedOptions = [...selectedOptions, createdOption];
+      setSelectedOptions(newSelectedOptions);
+      if (onSelectionChange) onSelectionChange(newSelectedOptions);
     }
   };
 
   const handleChange = (selected) => {
-    setSelectedOptions(selected);
-    if (onSelectionChange) onSelectionChange(selected);
+    const newSelected = selected || [];
+    setSelectedOptions(newSelected);
+    if (onSelectionChange) onSelectionChange(newSelected);
   };
 
   return (
@@ -48,6 +56,7 @@ const MultiSelectWithAddOption = ({
             '&:hover': { borderColor: '#3b82f6' },
           }),
         }}
+        isClearable={true}
       />
     </div>
   );
@@ -58,6 +67,7 @@ MultiSelectWithAddOption.propTypes = {
   onOptionCreate: PropTypes.func,
   onSelectionChange: PropTypes.func,
   placeholder: PropTypes.string,
+  value: PropTypes.array
 };
 
 export default MultiSelectWithAddOption;

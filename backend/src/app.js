@@ -38,6 +38,6 @@ app.use("/api/v1/teachers", dbSwitcher, teacherRoutes);
 app.use("/api/v1/subjects", dbSwitcher, subjectRoutes);
 app.use("/api/v1/schools", dbSwitcher, schoolRoutes);
 app.use("/api/v1/schedules", dbSwitcher, scheduleRoutes);
-app.use("/api/v1/duties", dbSwitcher, dutyRoutes);
+app.use("/api/v1/duty", dbSwitcher, dutyRoutes);
 
 export default app;

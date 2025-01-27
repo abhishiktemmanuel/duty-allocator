@@ -1,25 +1,27 @@
 import './App.css';
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/global-components/Sidebar'; // Import Sidebar
+import Sidebar from './components/global-components/Sidebar'; 
+import Duty from './components/pages/Duty';
 import Teachers from './components/pages/Teachers';
 import Schedule from './components/pages/Schedule';
 import Register from './components/auth/Register';
 import Login from './components/auth/Login';
 
+// App.jsx
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token')); // Manage authentication state
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Define navigation links for authenticated users
   const links = [
     { path: '/teachers', label: 'Teachers' },
     { path: '/schedule', label: 'Schedule' },
+    { path: '/duty', label: 'Duty' },
   ];
 
   return (
     <div className="App">
       {!token ? (
-        // If user is not logged in, show Register and Login components
+        // Login/Register routes remain the same
         <>
           <Routes>
             <Route path="/register" element={<Register />} />
@@ -28,35 +30,28 @@ function App() {
               element={
                 <Login
                   setToken={(newToken) => {
-                    localStorage.setItem('token', newToken); // Save token to localStorage
-                    setToken(newToken); // Update token state
+                    localStorage.setItem('token', newToken);
+                    setToken(newToken);
                   }}
                 />
               }
             />
-            {/* Redirect to login if no route matches */}
             <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         </>
       ) : (
-        // If user is logged in, show authenticated components with Sidebar and Logout
         <div className="flex">
-          {/* Sidebar Component */}
           <Sidebar
             links={links}
             brand="My App"
-            onLogout={() => {
-              localStorage.removeItem('token'); // Remove token from localStorage
-              setToken(null); // Clear token state
-            }}
+            setToken={setToken}  // Changed from onLogout to setToken
           />
-
-          {/* Main Content */}
           <div className="ml-64 flex-1 p-8">
             <Routes>
-              <Route path="/teachers" element={<Teachers />} />
+              <Route path="/duty" element={<Duty/>} />
               <Route path="/schedule" element={<Schedule />} />
-              {/* Redirect to Teachers page if no route matches */}
+              <Route path="/teachers" element={<Teachers />} />
+              
               <Route path="*" element={<Navigate to="/teachers" />} />
             </Routes>
           </div>
@@ -65,5 +60,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
