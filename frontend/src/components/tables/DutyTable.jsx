@@ -153,7 +153,6 @@ const DutyTable = () => {
               <th scope="col" className="py-3 px-6">Shift</th>
               <th scope="col" className="py-3 px-6">Subject</th>
               <th scope="col" className="py-3 px-6">Room</th>
-              <th scope="col" className="py-3 px-6">Status</th>
               <th scope="col" className="py-3 px-6">Invigilator 1</th>
               <th scope="col" className="py-3 px-6">Invigilator 2</th>
             </tr>
@@ -176,17 +175,7 @@ const DutyTable = () => {
                       {duty.room || 'N/A'}
                     </span>
                   </td>
-                  <td className="py-4 px-6">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      duty.status === 'ASSIGNED' 
-                        ? 'bg-green-100 text-green-800'
-                        : duty.status === 'UNASSIGNED'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {duty.status || 'UNASSIGNED'}
-                    </span>
-                  </td>
+                  
                   <td className="py-4 px-6">
                     {renderInvigilatorCell(duty, 'invidulator1', duty.invidulator1)}
                   </td>

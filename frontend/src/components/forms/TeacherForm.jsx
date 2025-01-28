@@ -118,77 +118,83 @@ const TeacherForm = ({ onTeacherAdded }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl">
-      {loading && (
-        <p className="text-center text-blue-500 font-semibold mb-4">Loading...</p>
-      )}
+    <div className="w-full p-6 sm:p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg sm:rounded-xl">
+  {loading && (
+    <p className="text-center text-blue-500 font-semibold mb-4">Loading...</p>
+  )}
 
-      {successMessage && (
-        <div className="mb-4 p-4 text-green-700 bg-green-100 border border-green-300 rounded-lg">
-          {successMessage}
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="mb-4 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg">
-          {errorMessage}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <InputField
-              id="teacherName"
-              type="text"
-              register={register("name", { required: "Teacher's name is required" })}
-              error={errors.name}
-              placeholder="Teacher's name"
-              className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 text-left indent-2 border-radius-[20rem]
-                        focus:ring-blue-500 focus:border-blue-500 block w-full"
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div>
-            <SingleSelectWithAddOption
-              options={schools}
-              placeholder="Select school"
-              onOptionCreate={handleAddSchool}
-              value={selectedSchool || null}
-              onSelectionChange={(selectedOption) => {
-                setValue("school", selectedOption);
-                setSelectedSchool(selectedOption);
-              }}
-            />
-          </div>
-        </div>
-
-        <div>
-          <div className="w-lg align">
-            <MultiSelectWithAddOption
-              options={subjects}
-              placeholder="Select subjects"
-              onOptionCreate={handleAddSubject}
-              value={selectedSubjects || []}
-              onSelectionChange={(selectedList) => {
-                setValue("subjects", selectedList);
-                setSelectedSubjects(selectedList);
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="absolute bottom-0 right-0 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Submit
-          </button>
-        </div>
-      </form>
+  {successMessage && (
+    <div className="mb-4 p-3 sm:p-4 text-green-700 bg-green-100 border border-green-300 rounded-md sm:rounded-lg">
+      {successMessage}
     </div>
+  )}
+
+  {errorMessage && (
+    <div className="mb-4 p-3 sm:p-4 text-red-700 bg-red-100 border border-red-300 rounded-md sm:rounded-lg">
+      {errorMessage}
+    </div>
+  )}
+
+  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 relative">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <div className="w-full">
+        <InputField
+          id="teacherName"
+          type="text"
+          register={register("name", { required: "Teacher's name is required" })}
+          error={errors.name}
+          placeholder="Teacher's name"
+          className="w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-2
+                    focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 text-sm sm:text-base"
+        />
+        {errors.name && (
+          <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.name.message}</p>
+        )}
+      </div>
+
+      <div className="w-full">
+        <SingleSelectWithAddOption
+          options={schools}
+          placeholder="Select school"
+          onOptionCreate={handleAddSchool}
+          value={selectedSchool || null}
+          onSelectionChange={(selectedOption) => {
+            setValue("school", selectedOption);
+            setSelectedSchool(selectedOption);
+          }}
+        />
+      </div>
+    </div>
+
+    <div className="space-y-4">
+      <div className="w-full">
+        <MultiSelectWithAddOption
+          options={subjects}
+          placeholder="Select subjects"
+          onOptionCreate={handleAddSubject}
+          value={selectedSubjects || []}
+          onSelectionChange={(selectedList) => {
+            setValue("subjects", selectedList);
+            setSelectedSubjects(selectedList);
+          }}
+        />
+      </div>
+
+      <div className="flex justify-end pt-4">
+        <button
+          type="submit"
+          className="w-full sm:w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 
+                   focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 
+                   sm:px-5 py-2 sm:py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 
+                   dark:focus:ring-blue-800"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
   );
 };
 

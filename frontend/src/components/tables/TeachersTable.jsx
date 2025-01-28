@@ -77,14 +77,15 @@ const TeacherTable = () => {
   }
 
   return (
-    <div>
+    <div className="w-full">
+      {/* Edit Modal */}
       {editingTeacher && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Edit Teacher</h2>
-            <form onSubmit={handleUpdate}>
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg max-w-md w-full">
+            <h2 className="text-lg sm:text-xl font-bold mb-4 dark:text-white">Edit Teacher</h2>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
                   Name
                 </label>
                 <input
@@ -92,20 +93,20 @@ const TeacherTable = () => {
                   name="name"
                   value={editingTeacher.name}
                   onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:border-gray-600"
                 />
               </div>
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingTeacher(null)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
                 >
                   Save
                 </button>
@@ -115,7 +116,8 @@ const TeacherTable = () => {
         </div>
       )}
 
-      <div className="overflow-x-auto relative shadow-md sm:rounded-lg">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto shadow-md rounded-lg">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
@@ -132,35 +134,28 @@ const TeacherTable = () => {
                   key={teacher._id}
                   className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
-                  <td className="py-4 px-6">
-                    {teacher.name}
-                  </td>
+                  <td className="py-4 px-6 font-medium">{teacher.name}</td>
                   <td className="py-4 px-6">
                     <div className="flex flex-wrap gap-1">
                       {teacher.subjects.map((subject, index) => (
-                        <span 
-                          key={index}
-                          className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded"
-                        >
+                        <span key={index} className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded">
                           {subject.name}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td className="py-4 px-6">
-                    {teacher.school?.name}
-                  </td>
+                  <td className="py-4 px-6">{teacher.school?.name}</td>
                   <td className="py-4 px-6">
                     <div className="flex gap-2">
                       <button
-                        className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
                         onClick={() => handleEdit(teacher)}
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
                       >
                         Edit
                       </button>
                       <button
-                        className="font-medium text-red-600 dark:text-red-500 hover:underline"
                         onClick={() => handleDelete(teacher._id)}
+                        className="text-red-600 dark:text-red-400 hover:underline text-sm font-medium"
                       >
                         Delete
                       </button>
@@ -170,13 +165,64 @@ const TeacherTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="text-center py-4">
-                  No teachers found
-                </td>
+                <td colSpan="4" className="text-center py-4">No teachers found</td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {Array.isArray(teachers) && teachers.length > 0 ? (
+          teachers.map((teacher) => (
+            <div 
+              key={teacher._id}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-3"
+            >
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium text-gray-900 dark:text-white">
+                  {teacher.school?.name}
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(teacher)}
+                    className="text-blue-600 dark:text-blue-400 text-sm font-medium"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(teacher._id)}
+                    className="text-red-600 dark:text-red-400 text-sm font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-gray-900 dark:text-white">{teacher.name}</p>
+              </div>
+
+              <div>
+                <div className="flex flex-wrap gap-1">
+                  {teacher.subjects.map((subject, index) => (
+                    <span 
+                      key={index}
+                      className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded"
+                    >
+                      {subject.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+            No teachers found
+          </div>
+        )}
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ function App() {
     brand="My App"
     setToken={setToken}
   />
-  <div className="w-full md:ml-48 p-4">
+  <div className="w-full md:ml-48 md:px-18 p-8">
     <Routes>
       <Route path="/duty" element={<Duty/>} />
       <Route path="/schedule" element={<Schedule />} />
