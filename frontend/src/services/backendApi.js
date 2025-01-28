@@ -119,9 +119,9 @@ export const fetchExamSchedules = async () => {
   }
 };
 
-export const deleteSchedule = async (scheduleId) => {
+export const deleteSchedule = async (examId) => {
   try {
-    const response = await API.delete(`/schedules/deleteexam/${scheduleId}`);
+    const response = await API.delete(`/schedules/exam/${examId}`);
     return response.data;
   } catch (error) {
     console.error(
@@ -134,12 +134,9 @@ export const deleteSchedule = async (scheduleId) => {
   }
 };
 
-export const updateSchedule = async (scheduleId, payload) => {
+export const updateSchedule = async (examId, payload) => {
   try {
-    const response = await API.put(
-      `/schedules/updateexam/${scheduleId}`,
-      payload
-    );
+    const response = await API.put(`/schedules/exam/${examId}`, payload);
     return response.data;
   } catch (error) {
     console.error(

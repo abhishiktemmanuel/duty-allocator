@@ -1,28 +1,63 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { fetchExamSchedules } from '../../services/backendApi';
+import { fetchExamSchedules, deleteSchedule, updateSchedule } from '../../services/backendApi';
 
 const ScheduleTable = () => {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingSchedule, setEditingSchedule] = useState(null);
+
+  const loadSchedules = async () => {
+    try {
+      const response = await fetchExamSchedules();
+      setSchedules(response.message || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading schedules:', err);
+      setError('Failed to load schedules');
+      setSchedules([]);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadSchedules = async () => {
-      try {
-        const response = await fetchExamSchedules();
-        // Ensure we're setting an array from the response
-        setSchedules(response.message || []);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error loading schedules:', err);
-        setError('Failed to load schedules');
-        setSchedules([]); // Set empty array on error
-        setLoading(false);
-      }
-    };
     loadSchedules();
   }, []);
+
+  const handleEdit = (scheduleId) => {
+    const schedule = schedules.find(s => s._id === scheduleId);
+    setEditingSchedule(schedule);
+  };
+
+  const handleDelete = async (scheduleId) => {
+    if (window.confirm('Are you sure you want to delete this schedule?')) {
+      try {
+        await deleteSchedule(scheduleId);
+        // Refresh the schedules list
+        loadSchedules();
+      } catch (err) {
+        console.error('Error deleting schedule:', err);
+        setError('Failed to delete schedule');
+      }
+    }
+  };
+
+  const handleUpdate = async (scheduleId, updatedData) => {
+    try {
+      await updateSchedule(scheduleId, updatedData);
+      setEditingSchedule(null);
+      // Refresh the schedules list
+      loadSchedules();
+    } catch (err) {
+      console.error('Error updating schedule:', err);
+      setError('Failed to update schedule');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSchedule(null);
+  };
 
   if (loading) {
     return (
@@ -60,53 +95,110 @@ const ScheduleTable = () => {
                 key={schedule._id}
                 className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
-                <td className="py-4 px-6">
-                  {schedule.subject.name}
-                </td>
-                <td className="py-4 px-6">
-                  {format(new Date(schedule.date), 'dd/MM/yyyy')}
-                </td>
-                <td className="py-4 px-6">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    schedule.shift === 'Morning' 
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {schedule.shift}
-                  </span>
-                </td>
-                <td className="py-4 px-6">
-                  <div className="flex flex-wrap gap-1">
-                    {schedule.rooms.map((room, index) => (
-                      <span 
-                        key={index}
-                        className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                {editingSchedule?._id === schedule._id ? (
+                  // Edit mode
+                  <>
+                    <td className="py-4 px-6">
+                      <input 
+                        type="text"
+                        defaultValue={schedule.subject.name}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </td>
+                    <td className="py-4 px-6">
+                      <input 
+                        type="date"
+                        defaultValue={format(new Date(schedule.date), 'yyyy-MM-dd')}
+                        className="border rounded px-2 py-1"
+                      />
+                    </td>
+                    <td className="py-4 px-6">
+                      <select 
+                        defaultValue={schedule.shift}
+                        className="border rounded px-2 py-1"
                       >
-                        {room}
+                        <option value="Morning">Morning</option>
+                        <option value="Evening">Evening</option>
+                      </select>
+                    </td>
+                    <td className="py-4 px-6">
+                      <input 
+                        type="text"
+                        defaultValue={schedule.rooms.join(', ')}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </td>
+                    <td className="py-4 px-6">
+                      <input 
+                        type="text"
+                        defaultValue={schedule.standard}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex gap-2">
+                        <button
+                          className="font-medium text-green-600 hover:underline"
+                          onClick={() => handleUpdate(schedule._id, {})}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="font-medium text-gray-600 hover:underline"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                ) : (
+                  // View mode
+                  <>
+                    <td className="py-4 px-6">{schedule.subject.name}</td>
+                    <td className="py-4 px-6">
+                      {format(new Date(schedule.date), 'dd/MM/yyyy')}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        schedule.shift === 'Morning' 
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {schedule.shift}
                       </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  {schedule.standard}
-                </td>
-                
-                <td className="py-4 px-6">
-                  <div className="flex gap-2">
-                    <button
-                      className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                      onClick={() => handleEdit(schedule._id)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="font-medium text-red-600 dark:text-red-500 hover:underline"
-                      onClick={() => handleDelete(schedule._id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex flex-wrap gap-1">
+                        {schedule.rooms.map((room, index) => (
+                          <span 
+                            key={index}
+                            className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                          >
+                            {room}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">{schedule.standard}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex gap-2">
+                        <button
+                          className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                          onClick={() => handleEdit(schedule._id)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="font-medium text-red-600 dark:text-red-500 hover:underline"
+                          onClick={() => handleDelete(schedule._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </>
+                )}
               </tr>
             ))
           ) : (

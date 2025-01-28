@@ -40,16 +40,43 @@ const registerTeacher = asyncHandler(async (req, res) => {
 });
 
 // Get all teachers
-const getAllTeachers = asyncHandler(async (req, res) => {
-  const Teacher = req.models.Teacher;
+// const getAllTeachers = asyncHandler(async (req, res) => {
+//   const Teacher = req.models.Teacher;
+
+//   const teachers = await Teacher.find({})
+//     .populate({ path: "subjects", select: "name" })
+//     .populate({ path: "school", select: "name" });
+
+//   if (!teachers || teachers.length === 0) {
+//     throw new ApiError(404, "No teachers found");
+//   }
+//   if (req.internal) {
+//     return teachers;
+//   }
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, teachers, "Teachers retrieved successfully"));
+// });
+
+// Core logic to fetch all teachers
+const fetchAllTeachers = async (models) => {
+  const Teacher = models.Teacher;
 
   const teachers = await Teacher.find({})
     .populate({ path: "subjects", select: "name" })
-    .populate({ path: "school", select: "name" });
+    .populate({ path: "school", select: "name" })
+    .lean();
 
   if (!teachers || teachers.length === 0) {
     throw new ApiError(404, "No teachers found");
   }
+
+  return teachers;
+};
+
+// Controller function for the API
+const getAllTeachers = asyncHandler(async (req, res) => {
+  const teachers = await fetchAllTeachers(req.models);
 
   return res
     .status(200)
@@ -115,4 +142,10 @@ const updateTeacher = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, updatedTeacher, "Teacher updated successfully"));
 });
 
-export { registerTeacher, getAllTeachers, deleteTeacher, updateTeacher };
+export {
+  registerTeacher,
+  fetchAllTeachers,
+  getAllTeachers,
+  deleteTeacher,
+  updateTeacher,
+};

@@ -1,38 +1,64 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
+import { fetchAllTeachers } from "./teacher.controller.js";
+import { fetchAllExamSchedules } from "./schedule.controller.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 
-export const dutySetter = asyncHandler(async (req, res) => {
+const dutySetter = async (req, res) => {
   try {
-    // Use dynamically compiled models from req.models
     const Duty = req.models.Duty;
     const Teacher = req.models.Teacher;
 
-    // Use services with dynamically compiled models
-    const teachers = await req.services.getAllTeachers(req.models.Teacher);
-    const examSchedules = await req.services.getSchedule(
-      req.models.ExamSchedule
-    );
+    const teachersData = await fetchAllTeachers(req.models);
+    const examSchedulesData = await fetchAllExamSchedules(req.models);
+
+    // Transform data while preserving original structure
+    const teachers = teachersData.map((teacher) => ({
+      _id: teacher._id,
+      name: teacher.name,
+      subjects: teacher.subjects, // Keep original subject objects
+      school: teacher.school, // Keep original school object
+      duties: teacher.duties.map((duty) => ({
+        _id: duty._id,
+        date: duty.date,
+        shift: duty.shift,
+      })),
+    }));
+
+    const examSchedules = examSchedulesData.map((examSchedule) => ({
+      _id: examSchedule._id,
+      subject: examSchedule.subject, // Keep original subject object
+      date: examSchedule.date,
+      shift: examSchedule.shift,
+      rooms: examSchedule.rooms,
+    }));
 
     let tempTeachers = [...teachers];
 
     const meetsFullCriteria = (teacher, exam, alreadyChosen) => {
+      if (!teacher?.subjects || !exam?.subject?._id) return false;
+
       const teachesExamSubject = teacher.subjects.some(
-        (subj) => subj.toString() === exam.subject.toString()
+        (subject) =>
+          subject?._id &&
+          exam.subject._id &&
+          subject._id.toString() === exam.subject._id.toString()
       );
       if (teachesExamSubject) return false;
 
-      const hasOverlappingDuty = teacher.duties?.some((duty) => {
-        return (
-          duty.date?.toISOString().split("T")[0] ===
-            exam.date?.toISOString().split("T")[0] && duty.shift === exam.shift
-        );
-      });
+      const hasOverlappingDuty = teacher.duties?.some(
+        (duty) =>
+          duty?.date &&
+          exam?.date &&
+          duty.date.toISOString().split("T")[0] ===
+            exam.date.toISOString().split("T")[0] &&
+          duty.shift === exam.shift
+      );
       if (hasOverlappingDuty) return false;
 
       if (
-        alreadyChosen &&
-        alreadyChosen.school.toString() === teacher.school.toString()
+        alreadyChosen?.school?._id &&
+        teacher?.school?._id &&
+        alreadyChosen.school._id.toString() === teacher.school._id.toString()
       ) {
         return false;
       }
@@ -41,17 +67,24 @@ export const dutySetter = asyncHandler(async (req, res) => {
     };
 
     const meetsRelaxedCriteria = (teacher, exam) => {
+      if (!teacher?.subjects || !exam?.subject?._id) return false;
+
       const teachesExamSubject = teacher.subjects.some(
-        (subj) => subj.toString() === exam.subject.toString()
+        (subject) =>
+          subject?._id &&
+          exam.subject._id &&
+          subject._id.toString() === exam.subject._id.toString()
       );
       if (teachesExamSubject) return false;
 
-      const hasOverlappingDuty = teacher.duties?.some((duty) => {
-        return (
-          duty.date?.toISOString().split("T")[0] ===
-            exam.date?.toISOString().split("T")[0] && duty.shift === exam.shift
-        );
-      });
+      const hasOverlappingDuty = teacher.duties?.some(
+        (duty) =>
+          duty?.date &&
+          exam?.date &&
+          duty.date.toISOString().split("T")[0] ===
+            exam.date.toISOString().split("T")[0] &&
+          duty.shift === exam.shift
+      );
       if (hasOverlappingDuty) return false;
 
       return true;
@@ -81,10 +114,9 @@ export const dutySetter = asyncHandler(async (req, res) => {
           findTeacher(exam, selectedInvidulators[0], true);
 
         if (!teacher) {
-          console.error("No eligible teacher found for exam:", exam);
           throw new ApiError(
-            "Not enough eligible teachers available for all duties",
-            400
+            400,
+            "Not enough eligible teachers available for all duties"
           );
         }
 
@@ -92,19 +124,18 @@ export const dutySetter = asyncHandler(async (req, res) => {
       }
 
       if (
-        selectedInvidulators[0].subjects.some(
-          (subj) => subj.toString() === exam.subject.toString()
+        selectedInvidulators[0]?.subjects?.some(
+          (subject) =>
+            subject?._id &&
+            exam.subject?._id &&
+            subject._id.toString() === exam.subject._id.toString()
         )
       ) {
         const alternateTeacher = findTeacher(exam, null, true);
         if (!alternateTeacher) {
-          console.error(
-            "Unable to resolve subject conflict for invigilators:",
-            selectedInvidulators[0]
-          );
           throw new ApiError(
-            "Unable to resolve subject conflict for invigilators",
-            400
+            400,
+            "Unable to resolve subject conflict for invigilators"
           );
         }
 
@@ -118,20 +149,22 @@ export const dutySetter = asyncHandler(async (req, res) => {
           shift: exam.shift,
           invidulator1: selectedInvidulators[0]._id,
           invidulator2: selectedInvidulators[1]._id,
-          subject: exam.subject,
-          room: exam.room,
+          subject: exam.subject._id,
+          room: exam.rooms[0], // Using first room from the array
           standard: exam.standard,
         });
         await newDuty.save();
+        console.log("newDuty", newDuty);
 
         for (const invigilator of selectedInvidulators) {
-          await Teacher.findByIdAndUpdate(invigilator._id, {
-            $push: { duties: newDuty._id },
-          });
+          if (invigilator?._id) {
+            await Teacher.findByIdAndUpdate(invigilator._id, {
+              $push: { duties: newDuty._id },
+            });
+          }
         }
       } catch (err) {
-        console.error("Error saving duty or updating teacher:", err.message);
-        throw new ApiError("Failed to assign duty. Please try again.", 400);
+        throw new ApiError(400, "Failed to assign duty. Please try again.");
       }
     }
 
@@ -150,7 +183,12 @@ export const dutySetter = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.error("Error assigning duties:", error.message);
-    throw error;
+    console.error("Error assigning duties:", error);
+    return res.status(error.statusCode || 500).json({
+      status: error.statusCode || 500,
+      message: error.message || "Internal Server Error",
+    });
   }
-});
+};
+
+export { dutySetter };

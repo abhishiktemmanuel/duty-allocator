@@ -2,15 +2,33 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+// Helper function to fetch all exam schedules
+const fetchAllExamSchedules = async (models) => {
+  const ExamSchedule = models.ExamSchedule;
+
+  const examSchedules = await ExamSchedule.find({})
+    .populate({
+      path: "subject",
+      model: models.Subject,
+      select: "name",
+    })
+    .sort({ date: -1 })
+    .lean();
+
+  if (!examSchedules?.length) {
+    throw new ApiError(404, "No exam schedules found");
+  }
+
+  return examSchedules;
+};
+
 // Add a new exam schedule
 const addExamDate = asyncHandler(async (req, res) => {
   const { subject, date, shift, rooms, standard } = req.body;
 
   // Validate required fields
   if (!subject || !date || !shift || !rooms?.length) {
-    return res.status(400).json({
-      status: "error",
-      message: "All fields are required.",
+    throw new ApiError(400, "All fields are required", {
       missingFields: {
         subject: !subject ? "Subject is missing" : undefined,
         date: !date ? "Date is missing" : undefined,
@@ -22,17 +40,15 @@ const addExamDate = asyncHandler(async (req, res) => {
 
   // Validate shift value
   if (!["Morning", "Evening"].includes(shift)) {
-    return res.status(400).json({
-      status: "error",
-      message:
-        "Invalid shift value. Allowed values are 'Morning' or 'Evening'.",
-    });
+    throw new ApiError(
+      400,
+      "Invalid shift value. Allowed values are 'Morning' or 'Evening'"
+    );
   }
 
-  // Use dynamically compiled ExamSchedule model from req.models
   const ExamSchedule = req.models.ExamSchedule;
 
-  // Check if exam schedule already exists for the same subject, date, and shift
+  // Check if exam schedule already exists
   const examScheduleExists = await ExamSchedule.findOne({
     $and: [{ subject }, { date }, { shift }],
   });
@@ -40,7 +56,7 @@ const addExamDate = asyncHandler(async (req, res) => {
     throw new ApiError(409, "This exam already exists");
   }
 
-  // Save the exam schedule to the database
+  // Save the exam schedule
   const createdExamSchedule = await ExamSchedule.create({
     subject,
     date,
@@ -53,29 +69,20 @@ const addExamDate = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to create exam schedule");
   }
 
-  return res.status(201).json({
-    status: "success",
-    data: createdExamSchedule,
-    message: "Exam schedule added successfully",
-  });
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        createdExamSchedule,
+        "Exam schedule added successfully"
+      )
+    );
 });
 
-// Function to get all exam schedules
+// Get all exam schedules (API controller)
 const getAllExamSchedules = asyncHandler(async (req, res) => {
-  const ExamSchedule = req.models.ExamSchedule;
-
-  const examSchedules = await ExamSchedule.find({})
-    .populate({
-      path: "subject",
-      model: req.models.Subject, // Add this line to explicitly specify the model
-      select: "name",
-    })
-    .sort({ date: -1 }) // Sort by date in descending order
-    .lean(); // Add lean() for better performance
-
-  if (!examSchedules || examSchedules.length === 0) {
-    throw new ApiError(404, "No exam schedules found");
-  }
+  const examSchedules = await fetchAllExamSchedules(req.models);
 
   return res
     .status(200)
@@ -88,4 +95,92 @@ const getAllExamSchedules = asyncHandler(async (req, res) => {
     );
 });
 
-export { addExamDate, getAllExamSchedules };
+// Edit exam schedule
+const editExamSchedule = asyncHandler(async (req, res) => {
+  const { examId } = req.params;
+  const { subject, date, shift, rooms, standard } = req.body;
+
+  // Validate exam ID
+  if (!examId) {
+    throw new ApiError(400, "Exam ID is required");
+  }
+
+  // Validate required fields
+  if (!subject && !date && !shift && !rooms?.length) {
+    throw new ApiError(400, "At least one field is required for update");
+  }
+
+  // Validate shift value if provided
+  if (shift && !["Morning", "Evening"].includes(shift)) {
+    throw new ApiError(
+      400,
+      "Invalid shift value. Allowed values are 'Morning' or 'Evening'"
+    );
+  }
+
+  const ExamSchedule = req.models.ExamSchedule;
+
+  // Find and update exam schedule
+  const updatedExamSchedule = await ExamSchedule.findByIdAndUpdate(
+    examId,
+    {
+      $set: {
+        subject: subject || undefined,
+        date: date || undefined,
+        shift: shift || undefined,
+        rooms: rooms || undefined,
+        standard: standard || undefined,
+      },
+    },
+    { new: true }
+  ).populate({
+    path: "subject",
+    model: req.models.Subject,
+    select: "name",
+  });
+
+  if (!updatedExamSchedule) {
+    throw new ApiError(404, "Exam schedule not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedExamSchedule,
+        "Exam schedule updated successfully"
+      )
+    );
+});
+
+// Delete exam schedule
+const deleteExamSchedule = asyncHandler(async (req, res) => {
+  const { examId } = req.params;
+
+  // Validate exam ID
+  if (!examId) {
+    throw new ApiError(400, "Exam ID is required");
+  }
+
+  const ExamSchedule = req.models.ExamSchedule;
+
+  // Find and delete exam schedule
+  const deletedExamSchedule = await ExamSchedule.findByIdAndDelete(examId);
+
+  if (!deletedExamSchedule) {
+    throw new ApiError(404, "Exam schedule not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Exam schedule deleted successfully"));
+});
+
+export {
+  addExamDate,
+  getAllExamSchedules,
+  fetchAllExamSchedules,
+  editExamSchedule,
+  deleteExamSchedule,
+};

@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 
 // Fetch teacher details
 export const getAllTeachers = async () => {
+  console.log("ok");
   try {
     const teachers = await Teacher.find()
       .populate("subjects", "name")
