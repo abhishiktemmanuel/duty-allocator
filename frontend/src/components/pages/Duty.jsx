@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { setDuty } from '../../services/backendApi';
+import DutyTable from '../tables/DutyTable';
 
 function Duty() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -11,7 +12,6 @@ function Duty() {
       setLoading(true);
       setError(null);
       await setDuty();
-      // Refresh the table after successful duty set
       setRefreshKey(prev => prev + 1);
     } catch (err) {
       setError(err.message);
@@ -43,7 +43,7 @@ function Duty() {
         </div>
       )}
       
-      {/* <DutyTable key={refreshKey} /> */}
+      <DutyTable key={refreshKey} />
     </div>
   );
 }
