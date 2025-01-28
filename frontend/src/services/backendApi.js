@@ -252,6 +252,7 @@ export const updateTeacher = async (teacherId, payload) => {
 export const getDuties = async () => {
   try {
     const response = await API.get("/duty/getduties");
+    console.log(response);
     return response.data;
   } catch (error) {
     console.error(
@@ -259,5 +260,18 @@ export const getDuties = async () => {
       error.response?.data?.message || error.message
     );
     throw new Error(error.response?.data?.message || "Failed to fetch duties");
+  }
+};
+
+export const updateDuty = async (dutyId, updateData) => {
+  try {
+    const response = await API.put(`/duty/${dutyId}`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating duty:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(error.response?.data?.message || "Failed to update duty");
   }
 };
