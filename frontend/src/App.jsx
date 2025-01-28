@@ -40,22 +40,22 @@ function App() {
           </Routes>
         </>
       ) : (
-        <div className="flex">
-          <Sidebar
-            links={links}
-            brand="My App"
-            setToken={setToken}  // Changed from onLogout to setToken
-          />
-          <div className="ml-64 flex-1 p-8">
-            <Routes>
-              <Route path="/duty" element={<Duty/>} />
-              <Route path="/schedule" element={<Schedule />} />
-              <Route path="/teachers" element={<Teachers />} />
-              
-              <Route path="*" element={<Navigate to="/teachers" />} />
-            </Routes>
-          </div>
-        </div>
+        <div className="flex flex-col md:flex-row">
+  <Sidebar
+    links={links}
+    brand="My App"
+    setToken={setToken}
+  />
+  <div className="w-full md:ml-48 p-4">
+    <Routes>
+      <Route path="/duty" element={<Duty/>} />
+      <Route path="/schedule" element={<Schedule />} />
+      <Route path="/teachers" element={<Teachers />} />
+      <Route path="*" element={<Navigate to="/teachers" />} />
+    </Routes>
+  </div>
+</div>
+
       )}
     </div>
   );

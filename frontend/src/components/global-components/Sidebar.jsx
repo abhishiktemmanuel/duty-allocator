@@ -4,6 +4,7 @@ import Logout from "../auth/Logout";
 import { useState, useEffect } from "react";
 
 const Sidebar = ({ links, brand, className = "", setToken }) => {
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -26,7 +27,7 @@ const Sidebar = ({ links, brand, className = "", setToken }) => {
         <div className="p-4 text-lg font-bold bg-gray-900">
           {brand || "My App"}
         </div>
-        <nav className="flex flex-col p-4 space-y-4">
+        <nav className="flex flex-col p-4 space-y-4" >
           {links.map((link) => (
             <NavLink
               key={link.path}
