@@ -40,7 +40,7 @@ const ScheduleForm = ({ onScheduleAdded }) => {
         setSubjects(subjectsData.map((sub) => ({ label: sub.name, value: sub._id })));
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
-        setErrorMessage("Could not load subjects at this time.");
+        setErrorMessage("Please add subjects, no subject data found.");
         setTimeout(() => setErrorMessage(""), 3000);
       } finally {
         setLoading(false);

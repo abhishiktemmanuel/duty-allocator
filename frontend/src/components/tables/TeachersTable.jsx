@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchTeachers, deleteTeacher, updateTeacher } from "../../services/backendApi";
+import { exportToCSV } from '../../services/csvExport';
+
 
 const TeacherTable = () => {
   const [teachers, setTeachers] = useState([]);
@@ -18,10 +20,29 @@ const TeacherTable = () => {
       setLoading(false);
     } catch (err) {
       console.error('Error loading teachers:', err);
-      setError('Failed to load teachers');
+      setError('Add teachers, no data found to display');
       setTeachers([]);
       setLoading(false);
     }
+  };
+
+  const handleExportTeachers = () => {
+    const headers = [
+      { label: 'Teacher Name', key: 'name' },
+      { label: 'Subjects', key: 'subjects' },
+      { label: 'School', key: 'school' }
+    ];
+
+    const exportData = teachers.map(teacher => ({
+      name: teacher.name,
+      subjects: teacher.subjects.map(subject => subject.name).join(', '),
+      school: teacher.school?.name || 'N/A'
+    }));
+
+    exportToCSV(exportData, {
+      headers,
+      filename: `teachers-list-${new Date().toISOString().split('T')[0]}`
+    });
   };
 
   const handleEdit = (teacher) => {
@@ -78,6 +99,15 @@ const TeacherTable = () => {
 
   return (
     <div className="w-full">
+      <div className="flex justify-end pb-2">
+        <button
+          onClick={handleExportTeachers}
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+        >
+          Export to CSV
+        </button>
+      </div>
+
       {/* Edit Modal */}
       {editingTeacher && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">

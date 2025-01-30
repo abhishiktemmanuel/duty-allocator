@@ -252,7 +252,6 @@ export const updateTeacher = async (teacherId, payload) => {
 export const getDuties = async () => {
   try {
     const response = await API.get("/duty/getduties");
-    console.log(response);
     return response.data;
   } catch (error) {
     console.error(

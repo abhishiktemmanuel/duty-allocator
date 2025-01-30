@@ -20,7 +20,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
     setValue,
     getValues,
     formState,
-    formState: {  errors, isSubmitSuccessful}
+    formState: {  errors}
   } = useForm({
     defaultValues: {
       name: '',
@@ -47,7 +47,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
         setSchools(schoolsData.map((school) => ({ label: school.name, value: school._id })));
       } catch (error) {
         console.error("Failed to load data:", error);
-        setErrorMessage("Failed to fetch subjects or schools. Please try again later.");
+        setErrorMessage("Please add data, no subject or school data found. ");
         setTimeout(() => setErrorMessage(""), 3000);
       } finally {
         setLoading(false);

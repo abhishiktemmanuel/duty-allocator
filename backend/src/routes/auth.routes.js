@@ -78,79 +78,38 @@ router.post("/register/admin", async (req, res) => {
   }
 });
 
-// End User Registration
-router.post("/register/enduser", async (req, res) => {
-  const { name, email, password, organizationId } = req.body;
-
-  try {
-    // Ensure that an organizationId is provided
-    if (!organizationId) {
-      return res
-        .status(400)
-        .json({ message: "Organization ID is required for end users" });
-    }
-
-    // Check if the organization exists
-    const existingOrganization = await Organization.findById(organizationId);
-    if (!existingOrganization) {
-      return res.status(404).json({ message: "Invalid Organization ID" });
-    }
-
-    // Hash the password and create the end user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newEndUser = new User({
-      name,
-      email,
-      password: hashedPassword,
-      role: "endUser",
-      organizationId,
-    });
-
-    await newEndUser.save();
-    return res
-      .status(201)
-      .json({ message: "End user registered successfully" });
-  } catch (error) {
-    console.error("Error registering End User:", error);
-    res.status(500).json({ message: "Error registering End User", error });
-  }
-});
-
 // Login a user
-// Login a user
+
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Find user by email (username is treated as email)
     const user = await User.findOne({ email: username });
 
     if (!user) {
       return res.status(400).json({ message: "Invalid user" });
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
-        organizationId: user._id || user.organizationId, // Include organizationId in token payload
+        organizationId: user._id || user.organizationId,
       },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
-    console.log(user._id || user.organizationId);
 
-    // Respond with token and organizationId
     res.status(200).json({
       token,
-      organizationId: user._id || user.organizationId, // Include organizationId in response
+      role: user.role,
+      organizationId: user._id || user.organizationId,
+      passwordChangeRequired: user.passwordChangeRequired,
     });
   } catch (error) {
     console.error("Error logging in:", error);

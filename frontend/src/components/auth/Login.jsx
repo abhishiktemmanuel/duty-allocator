@@ -1,13 +1,14 @@
 import { useState } from "react";
-import PropTypes from "prop-types";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/backendApi";
+import { useAuth } from '../../context/AuthContext';
 
-const Login = ({ setToken }) => {
+const Login = () => {
+  const { login } = useAuth();
   const [credentials, setCredentials] = useState({ username: "", password: "" });
-  const [loading, setLoading] = useState(false); // Add loading state for better UX
-  const [errorMessage, setErrorMessage] = useState(""); // Add error message state
-  const navigate = useNavigate(); // Initialize navigate function
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -16,13 +17,13 @@ const Login = ({ setToken }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMessage(""); // Clear previous error messages
+    setErrorMessage("");
     try {
       const response = await loginUser(credentials);
-      const token = response.token;
-      localStorage.setItem("token", token); // Store token in local storage
-      localStorage.setItem("organizationId", response.organizationId); // Store organizationId in local storage
-      setToken(token); // Update token state in App.jsx
+      const { token, role, organizationId } = response;
+      login({ token, role, organizationId });
+      localStorage.setItem("organizationId", organizationId);
+      navigate(role === 'endUser' ? '/dashboard' : '/teachers');
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Error logging in");
     } finally {
@@ -31,7 +32,7 @@ const Login = ({ setToken }) => {
   };
 
   const handleRegisterRedirect = () => {
-    navigate("/register"); // Redirect to the Register page
+    navigate("/register");
   };
 
   return (
@@ -41,16 +42,13 @@ const Login = ({ setToken }) => {
           Login
         </h2>
 
-        {/* Error Message */}
         {errorMessage && (
           <div className="mb-4 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg">
             {errorMessage}
           </div>
         )}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Username Field */}
           <div>
             <label
               htmlFor="username"
@@ -70,7 +68,6 @@ const Login = ({ setToken }) => {
             />
           </div>
 
-          {/* Password Field */}
           <div>
             <label
               htmlFor="password"
@@ -90,7 +87,6 @@ const Login = ({ setToken }) => {
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -102,7 +98,6 @@ const Login = ({ setToken }) => {
           </button>
         </form>
 
-        {/* Redirect to Register Button */}
         <div className="mt-4">
           <button
             onClick={handleRegisterRedirect}
@@ -114,10 +109,6 @@ const Login = ({ setToken }) => {
       </div>
     </div>
   );
-};
-
-Login.propTypes = {
-  setToken: PropTypes.func.isRequired,
 };
 
 export default Login;
