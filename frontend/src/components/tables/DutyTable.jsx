@@ -194,7 +194,7 @@ const DutyTable = () => {
     };
       
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <h2 className="text-xl font-semibold text-gray-900">Duty Assignments</h2>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -231,8 +231,7 @@ const DutyTable = () => {
         )}
   
         {/* Responsive Table/Cards */}
-        <div className="hidden sm:block">
-          <div className="overflow-x-auto relative shadow-md sm:rounded-lg">
+          <div className="hidden sm:block overflow-x-auto relative shadow-md sm:rounded-lg">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
@@ -278,7 +277,7 @@ const DutyTable = () => {
               </tbody>
             </table>
           </div>
-        </div>
+
 
         <div className="block sm:hidden">
           {Array.isArray(duties) && duties.length > 0 ? (

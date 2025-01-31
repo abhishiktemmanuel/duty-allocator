@@ -274,3 +274,18 @@ export const updateDuty = async (dutyId, updateData) => {
     throw new Error(error.response?.data?.message || "Failed to update duty");
   }
 };
+
+export const getTeacherDuties = async () => {
+  try {
+    const response = await API.get("/duty/teacher-duties");
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching teacher duties:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch teacher duties"
+    );
+  }
+};

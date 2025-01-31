@@ -99,16 +99,17 @@ router.post("/login", async (req, res) => {
       {
         id: user._id,
         role: user.role,
-        organizationId: user._id || user.organizationId,
+        organizationId: user.role === "admin" ? user._id : user.organizationId,
       },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     res.status(200).json({
+      _id: user._id,
       token,
       role: user.role,
-      organizationId: user._id || user.organizationId,
+      organizationId: user.role === "admin" ? user._id : user.organizationId,
       passwordChangeRequired: user.passwordChangeRequired,
     });
   } catch (error) {

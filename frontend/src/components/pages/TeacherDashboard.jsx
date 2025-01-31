@@ -1,4 +1,3 @@
-import React from 'react'
 import TeacherDutyTable from '../tables/TeacherDutyTable'
 
 function TeacherDashboard() {

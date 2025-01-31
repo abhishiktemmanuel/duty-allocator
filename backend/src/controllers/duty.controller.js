@@ -2,6 +2,8 @@ import { fetchAllTeachers } from "./teacher.controller.js";
 import { fetchAllExamSchedules } from "./schedule.controller.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import { User } from "../models/authModels/User.js";
+import jwt from "jsonwebtoken";
 
 const dutySetter = async (req, res) => {
   const session = await req.models.Duty.startSession();
@@ -374,4 +376,69 @@ const validateTeacherAssignment = async (req, res) => {
   }
 };
 
-export { dutySetter, getAllDuties, updateDuty, validateTeacherAssignment };
+// controllers/duty.controller.js
+const getTeacherDuties = async (req, res) => {
+  try {
+    const Teacher = req.models.Teacher;
+    // Get the decoded token data
+    const token = req.header("Authorization")?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "No token, authorization denied",
+      });
+    }
+
+    // Decode the token and get user from global User model
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user || !user.teacherId) {
+      return res.status(400).json({
+        success: false,
+        message: "No teacher ID associated with this account",
+      });
+    }
+
+    const teacherId1 = "679a8511df29092024bddcb9";
+    console.log(await req.models.Teacher.findById(teacherId1));
+    // Use the organization-specific Teacher model from req.models
+    const teacher = await Teacher.findById(teacherId1).populate({
+      path: "duties",
+      populate: [
+        { path: "subject", select: "name" },
+        { path: "invidulator1", select: "name" },
+        { path: "invidulator2", select: "name" },
+      ],
+      options: { sort: { date: 1, shift: 1 } },
+    });
+    console.log(teacher);
+    if (!teacher) {
+      return res.status(400).json({
+        success: false,
+        message: "Teacher not found in organization database",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Duties retrieved successfully",
+      data: teacher.duties,
+    });
+  } catch (error) {
+    console.error("Error in getTeacherDuties:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching duties",
+      error: error.message,
+    });
+  }
+};
+
+export {
+  dutySetter,
+  getAllDuties,
+  updateDuty,
+  validateTeacherAssignment,
+  getTeacherDuties,
+};

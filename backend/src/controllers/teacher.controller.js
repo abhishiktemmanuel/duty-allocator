@@ -75,7 +75,6 @@ const getAllTeachers = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, teachers, "Teachers retrieved successfully"));
 });
 
-// // Delete a teacher
 // const deleteTeacher = asyncHandler(async (req, res) => {
 //   const { teacherId } = req.params;
 //   const Teacher = req.models.Teacher;

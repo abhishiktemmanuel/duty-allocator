@@ -60,7 +60,7 @@ export default async (req, res, next) => {
         dbName: orgDb.name,
         timestamp: new Date(),
       };
-
+      console.log(`Connected to secondry db ${orgId}:`);
       next();
     } catch (dbError) {
       console.error(`Database connection error for orgId ${orgId}:`, dbError);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { getDuties } from '../../services/backendApi';
+import { getTeacherDuties } from '../../services/backendApi';
 
 const TeacherDutyTable = () => {
   const [duties, setDuties] = useState([]);
@@ -9,13 +9,11 @@ const TeacherDutyTable = () => {
 
   const loadData = async () => {
     try {
-      // TODO: Replace with actual API call to get teacher-specific duties
-      const dutiesResponse = await getDuties();
-      setDuties(dutiesResponse.message || []);
+      const response = await getTeacherDuties();
+      setDuties(response.data || []);
       setLoading(false);
     } catch (err) {
       console.error('Error loading data:', err);
-      setError('Unable to load your duties at the moment');
       setLoading(false);
     }
   };
