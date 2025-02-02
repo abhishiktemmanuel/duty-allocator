@@ -5,12 +5,15 @@ import { getTeacherDuties } from '../../services/backendApi';
 const TeacherDutyTable = () => {
   const [duties, setDuties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error] = useState('');
+  const [teacher, setTeacher] = useState(null);
 
   const loadData = async () => {
     try {
       const response = await getTeacherDuties();
-      setDuties(response.data || []);
+      setDuties(response.data.duties || []);
+      // Assuming the API returns teacher details in the response
+      setTeacher(response.data.teacher);
       setLoading(false);
     } catch (err) {
       console.error('Error loading data:', err);
@@ -18,9 +21,40 @@ const TeacherDutyTable = () => {
     }
   };
 
+
   useEffect(() => {
     loadData();
   }, []);
+
+  const renderTeacherDetails = () => {
+    if (!teacher) return null;
+
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Teacher Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Name:</span>
+            <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+              {teacher.name}
+            </span>
+          </div>
+          <div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">School:</span>
+            <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+              {teacher.school?.name || 'N/A'}
+            </span>
+          </div>
+          <div>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Subjects:</span>
+            <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">
+              {teacher.subjects?.map(subject => subject.name).join(', ') || 'N/A'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderMobileCard = (duty) => {
     return (
@@ -56,7 +90,7 @@ const TeacherDutyTable = () => {
           <div className="flex justify-between">
             <span className="text-sm text-gray-500 dark:text-gray-400">Co-Invigilator:</span>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
-              {(duty.invidulator1?.name === 'LOGGED_IN_TEACHER' ? duty.invidulator2?.name : duty.invidulator1?.name) || 'None'}
+              {(duty.invidulator1?.name === teacher.name ? duty.invidulator2?.name : duty.invidulator1?.name) || 'None'}
             </span>
           </div>
         </div>
@@ -85,6 +119,8 @@ const TeacherDutyTable = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">My Duties</h2>
       </div>
+      {/* Teacher Details Section */}
+      {renderTeacherDetails()}
 
       {/* Desktop View */}
       <div className="hidden sm:block">
@@ -118,7 +154,7 @@ const TeacherDutyTable = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      {(duty.invidulator1?.name === 'LOGGED_IN_TEACHER' ? duty.invidulator2?.name : duty.invidulator1?.name) || 'None'}
+                      {(duty.invidulator1?.name === teacher.name ? duty.invidulator2?.name : duty.invidulator1?.name) || 'None'}
                     </td>
                   </tr>
                 ))

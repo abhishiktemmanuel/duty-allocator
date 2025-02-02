@@ -278,6 +278,7 @@ export const updateDuty = async (dutyId, updateData) => {
 export const getTeacherDuties = async () => {
   try {
     const response = await API.get("/duty/teacher-duties");
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -287,5 +288,47 @@ export const getTeacherDuties = async () => {
     throw new Error(
       error.response?.data?.message || "Failed to fetch teacher duties"
     );
+  }
+};
+
+export const createTicket = async (ticketData) => {
+  try {
+    const response = await API.post("/tickets/create", ticketData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating ticket:", error);
+    throw error;
+  }
+};
+
+export const getTickets = async () => {
+  try {
+    const response = await API.get("/tickets");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    throw error;
+  }
+};
+
+export const updateTicketStatus = async (ticketId, data) => {
+  try {
+    const response = await API.patch(`/tickets/${ticketId}/status`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating ticket:", error);
+    throw error;
+  }
+};
+
+export const addTicketComment = async (ticketId, comment) => {
+  try {
+    const response = await API.post(`/tickets/${ticketId}/comment`, {
+      comment,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    throw error;
   }
 };

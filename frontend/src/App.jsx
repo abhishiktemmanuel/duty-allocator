@@ -10,6 +10,8 @@ import Login from './components/auth/Login';
 import TeacherDashboard from './components/pages/TeacherDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import TicketSystem from './components/tickets/TicketSystem';
+
 
 function AppContent() {
   const { user, logout } = useAuth();
@@ -29,10 +31,12 @@ function AppContent() {
           { path: '/teachers', label: 'Teachers' },
           { path: '/schedule', label: 'Schedule' },
           { path: '/duty', label: 'Duty' },
+          { path: '/tickets', label: 'Tickets' },
         ];
       case 'endUser':
         return [
-          { path: '/dashboard', label: 'Dashboard' }
+          { path: '/dashboard', label: 'Dashboard' },
+          { path: '/tickets', label: 'Help' },
         ];
       default:
         return [];
@@ -67,6 +71,14 @@ function AppContent() {
               <Route element={<ProtectedRoute allowedRoles={['endUser']} />}>
                 <Route path="/dashboard" element={<TeacherDashboard />} />
               </Route>
+
+              {/* Shared Routes - Protected but accessible by both admin and endUser */}
+  <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin', 'endUser']} />}>
+    <Route 
+      path="/tickets" 
+      element={<TicketSystem isAdmin={user.role === 'admin' || user.role === 'superAdmin'} />} 
+    />
+  </Route>
 
               {/* Default Route */}
               <Route path="/" element={

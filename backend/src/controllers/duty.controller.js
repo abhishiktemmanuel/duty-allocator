@@ -15,6 +15,7 @@ const dutySetter = async (req, res) => {
 
     // Clear existing duties
     await Duty.deleteMany({}, { session });
+    await Teacher.updateMany({}, { $set: { duties: [] } }, { session });
 
     const teachersData = await fetchAllTeachers(req.models);
     const examSchedulesData = await fetchAllExamSchedules(req.models);
@@ -376,11 +377,10 @@ const validateTeacherAssignment = async (req, res) => {
   }
 };
 
-// controllers/duty.controller.js
 const getTeacherDuties = async (req, res) => {
   try {
     const Teacher = req.models.Teacher;
-    // Get the decoded token data
+
     const token = req.header("Authorization")?.split(" ")[1];
     if (!token) {
       return res.status(401).json({
@@ -389,7 +389,6 @@ const getTeacherDuties = async (req, res) => {
       });
     }
 
-    // Decode the token and get user from global User model
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
@@ -400,19 +399,22 @@ const getTeacherDuties = async (req, res) => {
       });
     }
 
-    const teacherId1 = "679a8511df29092024bddcb9";
-    console.log(await req.models.Teacher.findById(teacherId1));
-    // Use the organization-specific Teacher model from req.models
-    const teacher = await Teacher.findById(teacherId1).populate({
-      path: "duties",
-      populate: [
-        { path: "subject", select: "name" },
-        { path: "invidulator1", select: "name" },
-        { path: "invidulator2", select: "name" },
-      ],
-      options: { sort: { date: 1, shift: 1 } },
-    });
-    console.log(teacher);
+    const teacherId = user.teacherId;
+
+    // Populate teacher with all necessary fields
+    const teacher = await Teacher.findById(teacherId)
+      .populate({
+        path: "duties",
+        populate: [
+          { path: "subject", select: "name" },
+          { path: "invidulator1", select: "name" },
+          { path: "invidulator2", select: "name" },
+        ],
+        options: { sort: { date: 1, shift: 1 } },
+      })
+      .populate("subjects", "name") // Populate subjects
+      .populate("school", "name"); // Populate school
+
     if (!teacher) {
       return res.status(400).json({
         success: false,
@@ -420,16 +422,24 @@ const getTeacherDuties = async (req, res) => {
       });
     }
 
+    // Structure the response to include both teacher details and duties
     return res.status(200).json({
       success: true,
-      message: "Duties retrieved successfully",
-      data: teacher.duties,
+      message: "Teacher data retrieved successfully",
+      data: {
+        teacher: {
+          name: teacher.name,
+          school: teacher.school,
+          subjects: teacher.subjects,
+        },
+        duties: teacher.duties,
+      },
     });
   } catch (error) {
     console.error("Error in getTeacherDuties:", error);
     return res.status(500).json({
       success: false,
-      message: "Error fetching duties",
+      message: "Error fetching teacher data",
       error: error.message,
     });
   }

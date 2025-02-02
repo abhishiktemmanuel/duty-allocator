@@ -4,6 +4,7 @@ import { School } from "../models/school.model.js";
 import { Teacher } from "../models/teacher.model.js";
 import { Duty } from "../models/duty.model.js";
 import { ExamSchedule } from "../models/examSchedule.model.js";
+import { Ticket } from "../models/ticket.model.js";
 
 // Cache for compiled models
 const modelCache = new Map();
@@ -47,6 +48,7 @@ export default async (req, res, next) => {
         School: getModelForOrg(orgDb, "School", School.schema),
         Teacher: getModelForOrg(orgDb, "Teacher", Teacher.schema),
         Duty: getModelForOrg(orgDb, "Duty", Duty.schema),
+        Ticket: getModelForOrg(orgDb, "Ticket", Ticket.schema),
         ExamSchedule: getModelForOrg(
           orgDb,
           "ExamSchedule",
@@ -60,7 +62,7 @@ export default async (req, res, next) => {
         dbName: orgDb.name,
         timestamp: new Date(),
       };
-      console.log(`Connected to secondry db ${orgId}:`);
+      // console.log(`Connected to secondry db ${orgId}:`);
       next();
     } catch (dbError) {
       console.error(`Database connection error for orgId ${orgId}:`, dbError);

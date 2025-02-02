@@ -32,6 +32,7 @@ import dutyRoutes from "./routes/duty.routes.js";
 import subjectRoutes from "./routes/subject.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import ticketRoutes from "./routes/ticket.routes.js";
 // Route declarations
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/teachers", dbSwitcher, teacherRoutes);
@@ -39,5 +40,6 @@ app.use("/api/v1/subjects", dbSwitcher, subjectRoutes);
 app.use("/api/v1/schools", dbSwitcher, schoolRoutes);
 app.use("/api/v1/schedules", dbSwitcher, scheduleRoutes);
 app.use("/api/v1/duty", dbSwitcher, dutyRoutes);
+app.use("/api/v1/tickets", dbSwitcher, ticketRoutes);
 
 export default app;

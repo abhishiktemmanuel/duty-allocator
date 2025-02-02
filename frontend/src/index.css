@@ -1,7 +1,28 @@
 @import "tailwindcss";
 
-.body {
+body {
   font-family: 'Nunito', sans-serif;
   background-color: rgb(184, 239, 254);
-
 }
+
+select-container {
+  position: relative;
+  width: 100%;
+}
+
+custom-select {
+  color: rgb(31 41 55); 
+  text-align: left;
+  text-indent: 0.5rem; 
+}
+
+custom-select-control {
+  border-radius: 9999px; 
+  border-color: rgb(209 213 219); 
+  box-shadow: none;
+}
+
+custom-select-control:hover {
+  border-color: rgb(59 130 246);
+}
+

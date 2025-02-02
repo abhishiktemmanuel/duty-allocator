@@ -52,6 +52,7 @@ const MultiSelectWithAddOption = ({
             ...base,
             borderRadius: '20rem',
             borderColor: '#d1d5db',
+            backgroundColor: 'white',
             boxShadow: 'none',
             '&:hover': { borderColor: '#3b82f6' },
           }),

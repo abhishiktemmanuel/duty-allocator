@@ -91,9 +91,14 @@ const DutyTable = () => {
     return (
       <div className="flex items-center gap-2">
         <div className={`h-8 w-8 rounded-full ${field === 'invidulator1' ? 'bg-blue-100' : 'bg-purple-100'} flex items-center justify-center`}>
-          <span className={`text-sm font-medium ${field === 'invidulator1' ? 'text-blue-800' : 'text-purple-800'}`}>
-            {invigilator?.name?.charAt(0) || '?'}
-          </span>
+        <span className={`text-sm font-medium ${field === 'invidulator1' ? 'text-blue-800' : 'text-purple-800'}`}>
+          {invigilator?.name?.split(' ')
+            .filter(word => !['prof', 'dr', 'mr', 'ms', 'mrs'].includes(word.toLowerCase()))
+            .slice(0, 1)
+            .map(word => word.charAt(0))
+            || '?'}
+        </span>
+
         </div>
         {isEditing ? (
           <div className="w-64">
