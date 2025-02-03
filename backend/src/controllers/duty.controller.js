@@ -3,6 +3,7 @@ import { fetchAllExamSchedules } from "./schedule.controller.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/authModels/User.js";
+import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
 
 const dutySetter = async (req, res) => {
@@ -33,27 +34,46 @@ const dutySetter = async (req, res) => {
       name: teacher.name,
       subjects: teacher.subjects,
       school: teacher.school,
-      duties: teacher.duties.map((duty) => ({
-        _id: duty._id,
-        date: duty.date,
-        shift: duty.shift,
-      })),
+      duties: teacher.duties,
+      // .map((duty) => ({
+      //   _id: duty._id,
+      //   date: duty.date,
+      //   shift: duty.shift,
+      // })),
     }));
 
-    const examSchedules = examSchedulesData.map((examSchedule) => ({
-      _id: examSchedule._id,
-      subject: examSchedule.subject,
-      date: examSchedule.date,
-      shift: examSchedule.shift,
-      rooms: examSchedule.rooms,
-      standard: examSchedule.standard,
-    }));
+    const examSchedules = examSchedulesData.flatMap((examSchedule) =>
+      examSchedule.rooms.map((room) => ({
+        _id: new ObjectId(), // Generate new ObjectId for each entry
+        subject: examSchedule.subject,
+        date: examSchedule.date,
+        shift: examSchedule.shift,
+        room: room,
+        standard: examSchedule.standard,
+      }))
+    );
 
     let tempTeachers = [...teachers];
     const unassignedExams = [];
     const assignedDuties = [];
 
-    const meetsFullCriteria = (teacher, exam, alreadyChosen) => {
+    const hasOverlappingDuty = (teacher, exam, assignedDuties) => {
+      return assignedDuties.some(
+        (duty) =>
+          (duty.invidulator1.toString() === teacher._id.toString() ||
+            duty.invidulator2.toString() === teacher._id.toString()) &&
+          duty.date.toISOString().split("T")[0] ===
+            exam.date.toISOString().split("T")[0] &&
+          duty.shift === exam.shift
+      );
+    };
+
+    const meetsFullCriteria = (
+      teacher,
+      exam,
+      alreadyChosen,
+      assignedDuties
+    ) => {
       if (!teacher?.subjects || !exam?.subject?._id) return false;
 
       const teachesExamSubject = teacher.subjects.some(
@@ -64,15 +84,7 @@ const dutySetter = async (req, res) => {
       );
       if (teachesExamSubject) return false;
 
-      const hasOverlappingDuty = teacher.duties?.some(
-        (duty) =>
-          duty?.date &&
-          exam?.date &&
-          duty.date.toISOString().split("T")[0] ===
-            exam.date.toISOString().split("T")[0] &&
-          duty.shift === exam.shift
-      );
-      if (hasOverlappingDuty) return false;
+      if (hasOverlappingDuty(teacher, exam, assignedDuties)) return false;
 
       if (
         alreadyChosen?.school?._id &&
@@ -85,7 +97,7 @@ const dutySetter = async (req, res) => {
       return true;
     };
 
-    const meetsRelaxedCriteria = (teacher, exam) => {
+    const meetsRelaxedCriteria = (teacher, exam, assignedDuties) => {
       if (!teacher?.subjects || !exam?.subject?._id) return false;
 
       const teachesExamSubject = teacher.subjects.some(
@@ -96,25 +108,32 @@ const dutySetter = async (req, res) => {
       );
       if (teachesExamSubject) return false;
 
-      const hasOverlappingDuty = teacher.duties?.some(
-        (duty) =>
-          duty?.date &&
-          exam?.date &&
-          duty.date.toISOString().split("T")[0] ===
-            exam.date.toISOString().split("T")[0] &&
-          duty.shift === exam.shift
-      );
-      if (hasOverlappingDuty) return false;
+      if (hasOverlappingDuty(teacher, exam, assignedDuties)) return false;
 
       return true;
     };
 
     const findTeacher = (exam, alreadyChosen, relaxed = false) => {
+      if (!tempTeachers.length) {
+        tempTeachers = [...teachers];
+        for (let i = tempTeachers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tempTeachers[i], tempTeachers[j]] = [
+            tempTeachers[j],
+            tempTeachers[i],
+          ];
+        }
+      }
       for (let i = 0; i < tempTeachers.length; i++) {
         const currentTeacher = tempTeachers[i];
         const isEligible = relaxed
-          ? meetsRelaxedCriteria(currentTeacher, exam)
-          : meetsFullCriteria(currentTeacher, exam, alreadyChosen);
+          ? meetsRelaxedCriteria(currentTeacher, exam, assignedDuties)
+          : meetsFullCriteria(
+              currentTeacher,
+              exam,
+              alreadyChosen,
+              assignedDuties
+            );
 
         if (isEligible) {
           tempTeachers.splice(i, 1);
@@ -148,7 +167,7 @@ const dutySetter = async (req, res) => {
             date: exam.date,
             shift: exam.shift,
             subject: exam.subject._id,
-            room: exam.rooms[0],
+            room: exam.room,
             standard: exam.standard,
             status: "UNASSIGNED",
           });
@@ -164,7 +183,7 @@ const dutySetter = async (req, res) => {
           invidulator1: selectedInvidulators[0]._id,
           invidulator2: selectedInvidulators[1]._id,
           subject: exam.subject._id,
-          room: exam.rooms[0],
+          room: exam.room,
           standard: exam.standard,
           status: "ASSIGNED",
         });
