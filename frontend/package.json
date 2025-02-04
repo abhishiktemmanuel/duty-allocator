@@ -19,6 +19,7 @@
     "axios": "^1.7.9",
     "daisyui": "^4.12.23",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7",
     "jwt-decode": "^4.0.0",
     "multiselect-react-dropdown": "^2.0.25",
     "postcss": "^8.5.1",
