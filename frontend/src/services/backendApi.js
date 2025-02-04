@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create an Axios instance for API calls
 const API = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL + "/api/v1",
+  baseURL: "https://duty-allocator.onrender.com" + "/api/v1",
   // ||
   // "http://localhost:4000/api/v1",
 });
