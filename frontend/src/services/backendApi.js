@@ -1,5 +1,4 @@
 import axios from "axios";
-
 // Create an Axios instance for API calls
 const API = axios.create({
   baseURL:
