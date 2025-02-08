@@ -1,20 +1,45 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useAuth } from '../../context/AuthContext';
+import { useEffect, useState } from 'react';
+import { getSubscriptionStatus } from '../../services/backendApi';
 
 const ProtectedRoute = ({ allowedRoles }) => {
   const { user } = useAuth();
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const token = localStorage.getItem('token');
+  const location = useLocation();
   
-  // Check for token and user authentication
+  useEffect(() => {
+    if (user && (user.role === 'admin')) {
+      getSubscriptionStatus()
+        .then(response => {
+          if(response.data.status==="active"){
+            setHasActiveSubscription(true);
+          }
+          else{
+            setHasActiveSubscription(false);
+          }
+          
+        })
+        .catch(error => {
+          console.error('Error checking subscription:', error);
+          setHasActiveSubscription(false);
+        });
+    }
+  }, [user]);
+
   if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Check role authorization
   if (!allowedRoles.includes(user.role)) {
-    // Redirect based on user role instead of to /unauthorized
     return <Navigate to={user.role === 'endUser' ? '/dashboard' : '/teachers'} replace />;
+  }
+  if ((user.role === 'admin') && 
+      !hasActiveSubscription && 
+      location.pathname !== '/subscription') {
+    return <Navigate to="/subscription" replace />;
   }
 
   return <Outlet />;
@@ -25,30 +50,3 @@ ProtectedRoute.propTypes = {
 };
 
 export default ProtectedRoute;
-
-
-
-// import { Navigate, Outlet } from 'react-router-dom';
-// import PropTypes from 'prop-types';
-// import { useAuth } from '../../context/AuthContext';
-
-// const ProtectedRoute = ({ allowedRoles }) => {
-//   const { user } = useAuth();
-//   const token = localStorage.getItem('token');
-  
-//   if (!token || !user) {
-//     return <Navigate to="/login" replace />;
-//   }
-
-//   if (!allowedRoles.includes(user.role)) {
-//     return <Navigate to="/unauthorized" replace />;
-//   }
-
-//   return <Outlet />;
-// };
-
-// ProtectedRoute.propTypes = {
-//   allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired
-// };
-
-// export default ProtectedRoute;

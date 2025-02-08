@@ -332,3 +332,66 @@ export const addTicketComment = async (ticketId, comment) => {
     throw error;
   }
 };
+
+// Subscription APIs
+export const createSubscription = async (planId) => {
+  console.log("planId", planId);
+  try {
+    const response = await API.post("/subscriptions/create", { planId });
+    console.log("response", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error creating subscription:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to create subscription"
+    );
+  }
+};
+
+export const getSubscriptionStatus = async () => {
+  try {
+    const response = await API.get("/subscriptions/status");
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching subscription status:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch subscription status"
+    );
+  }
+};
+
+export const cancelSubscription = async () => {
+  try {
+    const response = await API.post("/subscriptions/cancel");
+    return response.data;
+  } catch (error) {
+    console.error("Error cancelling subscription:", error);
+    throw error;
+  }
+};
+
+export const getProfileDetails = async () => {
+  try {
+    const response = await API.get("/profile/details");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching profile details:", error);
+    throw error;
+  }
+};
+
+export const updateProfile = async (profileData) => {
+  try {
+    const response = await API.put("/profile/update", profileData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw error;
+  }
+};

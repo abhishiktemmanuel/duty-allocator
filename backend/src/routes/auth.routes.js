@@ -1,3 +1,4 @@
+//routes/auth.routes.js
 import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -6,6 +7,10 @@ import Organization from "../models/authModels/organization.model.js";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+
+router.post("/refresh-token", async (req, res) => {
+  // Implement token refresh logic here
+});
 
 // SuperAdmin Registration
 // router.post("/register/superadmin", async (req, res) => {
@@ -38,6 +43,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
 // });
 
 // Admin Registration
+
 router.post("/register/admin", async (req, res) => {
   const { name, email, password } = req.body;
 

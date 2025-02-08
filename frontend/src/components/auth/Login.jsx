@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/backendApi";
 import { useAuth } from '../../context/AuthContext';
+import { getSubscriptionStatus } from '../../services/backendApi';
 
 const Login = () => {
   const { login } = useAuth();
@@ -14,6 +15,23 @@ const Login = () => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   setErrorMessage("");
+  //   try {
+  //     const response = await loginUser(credentials);
+  //     const { token, role, organizationId } = response;
+  //     login({ token, role, organizationId });
+  //     localStorage.setItem("organizationId", organizationId);
+  //     navigate(role === 'endUser' ? '/dashboard' : '/teachers');
+  //   } catch (error) {
+  //     setErrorMessage(error.response?.data?.message || "Error logging in");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -23,6 +41,15 @@ const Login = () => {
       const { token, role, organizationId } = response;
       login({ token, role, organizationId });
       localStorage.setItem("organizationId", organizationId);
+      
+      if (role === 'admin' || role === 'superAdmin') {
+        const subscriptionStatus = await getSubscriptionStatus();
+        if (!subscriptionStatus.data.success) {
+          navigate('/subscription');
+          return;
+        }
+      }
+      
       navigate(role === 'endUser' ? '/dashboard' : '/teachers');
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Error logging in");
@@ -30,7 +57,7 @@ const Login = () => {
       setLoading(false);
     }
   };
-
+  
   const handleRegisterRedirect = () => {
     navigate("/register");
   };

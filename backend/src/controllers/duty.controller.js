@@ -35,11 +35,6 @@ const dutySetter = async (req, res) => {
       subjects: teacher.subjects,
       school: teacher.school,
       duties: teacher.duties,
-      // .map((duty) => ({
-      //   _id: duty._id,
-      //   date: duty.date,
-      //   shift: duty.shift,
-      // })),
     }));
 
     const examSchedules = examSchedulesData.flatMap((examSchedule) =>
