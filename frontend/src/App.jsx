@@ -15,7 +15,7 @@ import LandingPage from './components/pages/LandingPage';
 import Profile from './components/pages/Profile';
 import { getSubscriptionStatus } from './services/backendApi';
 import PrivacyPolicy from './components/pages/legal-pages/PrivacyPolicy';
-import TermsAndConditions from './components/pages/legal-pages/PrivacyPolicy';
+import TermsAndConditions from './components/pages/legal-pages/TermsAndConditions';
 import CancellationRefundPolicy from './components/pages/legal-pages/CancellationRefundPolicy';
 
 
