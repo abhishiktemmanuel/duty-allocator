@@ -11,7 +11,6 @@ import TeacherDashboard from './components/pages/TeacherDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import TicketSystem from './components/tickets/TicketSystem';
-import Subscription from './components/Subscription';
 import LandingPage from './components/pages/LandingPage'; // Import the Landing Page component
 import Profile from './components/pages/Profile'; // Import the Profile component
 
@@ -34,7 +33,6 @@ function AppContent() {
           { path: '/schedule', label: 'Schedule' },
           { path: '/duty', label: 'Duty' },
           { path: '/tickets', label: 'Tickets' },
-          { path: '/subscription', label: 'Subscription' },
           { path: '/profile', label: 'Profile' },
         ];
       case 'endUser':
@@ -68,14 +66,13 @@ function AppContent() {
             brand="My App"
             setToken={logout}
           />
-          <div className="w-full md:ml-48 md:px-18 p-8">
+          <div className="w-full md:ml-48 md:px-26 p-8">
             <Routes>
               {/* Admin Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin']} />}>
                 <Route path="/teachers" element={<Teachers />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/duty" element={<Duty />} />
-                <Route path="/subscription" element={<Subscription />} />
                 <Route path="/profile" element={<Profile />} />
               </Route>
 

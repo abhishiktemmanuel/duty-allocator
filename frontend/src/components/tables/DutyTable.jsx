@@ -234,10 +234,10 @@ const DutyTable = () => {
 
   const handleExportDuties = () => {
     const headers = [
+      { label: 'Room', key: 'room' },
       { label: 'Date', key: 'date' },
       { label: 'Shift', key: 'shift' },
       { label: 'Subject', key: 'subject' },
-      { label: 'Room', key: 'room' },
       { label: 'Invigilator 1', key: 'invigilator1' },
       { label: 'Invigilator 2', key: 'invigilator2' }
     ];

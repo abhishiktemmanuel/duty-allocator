@@ -25,7 +25,7 @@ const Profile = () => {
       setName(data.data.user.name);
       setEmail(data.data.user.email);
       setLoading(false);
-    } catch (error) {
+    } catch (err) {
       setError('Error fetching profile details');
       setLoading(false);
     }

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/backendApi";
 import { useAuth } from '../../context/AuthContext';
-import { getSubscriptionStatus } from '../../services/backendApi';
 
 const Login = () => {
   const { login } = useAuth();
@@ -41,14 +40,6 @@ const Login = () => {
       const { token, role, organizationId } = response;
       login({ token, role, organizationId });
       localStorage.setItem("organizationId", organizationId);
-      
-      if (role === 'admin' || role === 'superAdmin') {
-        const subscriptionStatus = await getSubscriptionStatus();
-        if (!subscriptionStatus.data.success) {
-          navigate('/subscription');
-          return;
-        }
-      }
       
       navigate(role === 'endUser' ? '/dashboard' : '/teachers');
     } catch (error) {

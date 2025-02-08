@@ -38,8 +38,9 @@ const ProtectedRoute = ({ allowedRoles }) => {
   }
   if ((user.role === 'admin') && 
       !hasActiveSubscription && 
-      location.pathname !== '/subscription') {
-    return <Navigate to="/subscription" replace />;
+      location.pathname !== '/profile') {
+        console.log('Redirecting to profile');
+    return <Navigate to="/profile" replace />;
   }
 
   return <Outlet />;
