@@ -1,45 +1,20 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useAuth } from '../../context/AuthContext';
-import { useEffect, useState } from 'react';
-import { getSubscriptionStatus } from '../../services/backendApi';
 
-const ProtectedRoute = ({ allowedRoles }) => {
+const ProtectedRoute = ({ allowedRoles, hasActiveSubscription }) => {
   const { user } = useAuth();
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const token = localStorage.getItem('token');
-  const location = useLocation();
-  
-  useEffect(() => {
-    if (user && (user.role === 'admin')) {
-      getSubscriptionStatus()
-        .then(response => {
-          if(response.data.status==="active"){
-            setHasActiveSubscription(true);
-          }
-          else{
-            setHasActiveSubscription(false);
-          }
-          
-        })
-        .catch(error => {
-          console.error('Error checking subscription:', error);
-          setHasActiveSubscription(false);
-        });
-    }
-  }, [user]);
 
   if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to={user.role === 'endUser' ? '/dashboard' : '/teachers'} replace />;
+    return <Navigate to={user.role === 'endUser' ? '/dashboard' : '/profile'} replace />;
   }
-  if ((user.role === 'admin') && 
-      !hasActiveSubscription && 
-      location.pathname !== '/profile') {
-        console.log('Redirecting to profile');
+
+  if ((user.role === 'admin' || user.role === 'superAdmin') && !hasActiveSubscription) {
     return <Navigate to="/profile" replace />;
   }
 
@@ -47,7 +22,8 @@ const ProtectedRoute = ({ allowedRoles }) => {
 };
 
 ProtectedRoute.propTypes = {
-  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired
+  allowedRoles: PropTypes.arrayOf(PropTypes.string).isRequired,
+  hasActiveSubscription: PropTypes.bool.isRequired
 };
 
 export default ProtectedRoute;

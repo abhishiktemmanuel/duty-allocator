@@ -31,7 +31,7 @@ const LandingPage = () => {
             Efficiently manage and allocate invigilation duties for your school examinations with our SaaS solution.
           </p>
           <a
-            href="#signup"
+            href="#pricing"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
           >
             Get Started
@@ -73,6 +73,12 @@ const LandingPage = () => {
             <p className="text-lg mb-4">
               Email: <a href="support@abhishikt.com" className="text-blue-600">support@abhishikt.com</a>
             </p>
+            <p className="text-lg mb-4">
+              Phone: +91 6393902742
+            </p >
+            <p className="text-lg mb-4">
+              Write to us at 15/29 A, Civil Lines, Kanpur, Uttar Pradesh, India - 208001
+            </p>
 
           </div>
         </div>
@@ -81,7 +87,12 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-10">
         <div className="container mx-auto text-center">
-          <p>&copy; 2025 nuncio. All rights reserved.</p>
+          <p>&copy; 2025 Nuncio. All rights reserved.</p>
+          <div className="mt-4">
+            <a href="/privacy-policy" className="mx-2 hover:text-blue-400">Privacy Policy</a>
+            <a href="/terms-and-conditions" className="mx-2 hover:text-blue-400">Terms & Conditions</a>
+            <a href="/cancellation-refund-policy" className="mx-2 hover:text-blue-400">Cancellation & Refund Policy</a>
+          </div>
         </div>
       </footer>
     </div>

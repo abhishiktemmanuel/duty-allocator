@@ -278,7 +278,6 @@ export const updateDuty = async (dutyId, updateData) => {
 export const getTeacherDuties = async () => {
   try {
     const response = await API.get("/duty/teacher-duties");
-    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error(
@@ -335,7 +334,6 @@ export const addTicketComment = async (ticketId, comment) => {
 
 // Subscription APIs
 export const createSubscription = async (planId) => {
-  console.log("planId", planId);
   try {
     const response = await API.post("/subscriptions/create", { planId });
     console.log("response", response.data);

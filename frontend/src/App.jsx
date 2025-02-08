@@ -1,6 +1,6 @@
 import './App.css';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from './components/global-components/Sidebar';
 import Duty from './components/pages/Duty';
 import Teachers from './components/pages/Teachers';
@@ -11,20 +11,42 @@ import TeacherDashboard from './components/pages/TeacherDashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import TicketSystem from './components/tickets/TicketSystem';
-import LandingPage from './components/pages/LandingPage'; // Import the Landing Page component
-import Profile from './components/pages/Profile'; // Import the Profile component
+import LandingPage from './components/pages/LandingPage';
+import Profile from './components/pages/Profile';
+import { getSubscriptionStatus } from './services/backendApi';
+import PrivacyPolicy from './components/pages/legal-pages/PrivacyPolicy';
+import TermsAndConditions from './components/pages/legal-pages/PrivacyPolicy';
+import CancellationRefundPolicy from './components/pages/legal-pages/CancellationRefundPolicy';
+
 
 function AppContent() {
   const { user, logout } = useAuth();
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token && user) {
       logout();
     }
+    if (user && (user.role === 'admin' || user.role === 'superAdmin')) {
+      checkSubscriptionStatus();
+    }
   }, [user, logout]);
 
+  const checkSubscriptionStatus = async () => {
+    try {
+      const response = await getSubscriptionStatus();
+      setHasActiveSubscription(response.data.status === "active");
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setHasActiveSubscription(false);
+    }
+  };
+
   const getNavLinks = (role) => {
+    if ((role === 'admin' || role === 'superAdmin') && !hasActiveSubscription) {
+      return [{ path: '/profile', label: 'Profile' }];
+    }
     switch (role) {
       case 'superAdmin':
       case 'admin':
@@ -49,15 +71,14 @@ function AppContent() {
     <div className="App">
       {!user ? (
         <Routes>
-          {/* Landing Page Route - Accessible to all users */}
           <Route path="/" element={<LandingPage />} />
-
-          {/* Auth Routes */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-
-          {/* Redirect all other unauthenticated routes to the landing page */}
           <Route path="*" element={<Navigate to="/" />} />
+           {/* Policy Pages */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/cancellation-refund-policy" element={<CancellationRefundPolicy />} />
         </Routes>
       ) : (
         <div className="flex flex-col md:flex-row">
@@ -69,34 +90,30 @@ function AppContent() {
           <div className="w-full md:ml-48 md:px-26 p-8">
             <Routes>
               {/* Admin Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin']} hasActiveSubscription={hasActiveSubscription} />}>
                 <Route path="/teachers" element={<Teachers />} />
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/duty" element={<Duty />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/tickets" element={<TicketSystem isAdmin={true} />} />
               </Route>
+
+              {/* Profile Route (always accessible) */}
+              <Route path="/profile" element={<Profile />} />
 
               {/* End User Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['endUser']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['endUser']} hasActiveSubscription={true} />}>
                 <Route path="/dashboard" element={<TeacherDashboard />} />
-              </Route>
-
-              {/* Shared Routes - Protected but accessible by both admin and endUser */}
-              <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin', 'endUser']} />}>
-                <Route
-                  path="/tickets"
-                  element={<TicketSystem isAdmin={user.role === 'admin' || user.role === 'superAdmin'} />}
-                />
+                <Route path="/tickets" element={<TicketSystem isAdmin={false} />} />
               </Route>
 
               {/* Default Route for Authenticated Users */}
               <Route
                 path="/"
-                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : '/teachers'} />}
+                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : (hasActiveSubscription ? '/teachers' : '/profile')} />}
               />
               <Route
                 path="*"
-                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : '/teachers'} />}
+                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : (hasActiveSubscription ? '/teachers' : '/profile')} />}
               />
             </Routes>
           </div>
