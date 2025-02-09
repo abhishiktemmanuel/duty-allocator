@@ -1,8 +1,5 @@
+// models/Teacher.js
 import mongoose from "mongoose";
-import { Subject } from "./subject.model.js";
-import { School } from "./school.model.js";
-import { Duty } from "./duty.model.js";
-import Organization from "./authModels/organization.model.js";
 import { User } from "./authModels/User.js";
 import bcrypt from "bcrypt";
 
@@ -12,7 +9,6 @@ const TeacherSchema = new mongoose.Schema(
       type: String,
       required: true,
       uppercase: true,
-      unique: true,
     },
     subjects: [
       {
@@ -41,29 +37,42 @@ const TeacherSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Post-save middleware to create end user
+// Post-save middleware to create or update end user
 TeacherSchema.post("save", async function (doc) {
   try {
-    // Create email from name
     const email = `${doc.name.toLowerCase().replace(/\s+/g, ".")}@school.com`;
-
-    // Hash the temporary password
     const hashedPassword = await bcrypt.hash(doc.name, 10);
 
-    // Create the end user
-    const newUser = new User({
-      name: doc.name,
-      email: email,
-      password: hashedPassword,
-      role: "endUser",
-      organizationId: doc.organization,
-      teacherId: doc._id,
-      passwordChangeRequired: true, // Add this field to User schema
-    });
+    const existingUser = await User.findOne({ email: email });
 
-    await newUser.save();
+    if (existingUser) {
+      // Update existing user
+      existingUser.organizations.push({
+        organizationId: doc.organization,
+        teacherId: doc._id,
+        status: "Active",
+      });
+      await existingUser.save();
+    } else {
+      // Create new user
+      const newUser = new User({
+        name: doc.name,
+        email: email,
+        password: hashedPassword,
+        role: "endUser",
+        passwordChangeRequired: true,
+        organizations: [
+          {
+            organizationId: doc.organization,
+            teacherId: doc._id,
+            status: "Active",
+          },
+        ],
+      });
+      await newUser.save();
+    }
   } catch (error) {
-    console.error("Error creating end user for teacher:", error);
+    console.error("Error creating/updating end user for teacher:", error);
   }
 });
 
