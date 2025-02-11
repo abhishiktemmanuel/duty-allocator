@@ -1,15 +1,9 @@
-// Admin Registration
+//routes/auth.routes.js
 import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../models/authModels/User.js";
 import Organization from "../models/authModels/organization.model.js";
-import {
-  createUser,
-  linkExternalAccount,
-  switchOrganization,
-} from "../services/userManagementService.js";
-import authMiddleware from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
@@ -48,31 +42,35 @@ router.post("/refresh-token", async (req, res) => {
 //   }
 // });
 
+// Admin Registration
+
 router.post("/register/admin", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create a new organization for the admin
     const newOrganization = new Organization({
-      name: `${name}'s Organization`,
-      adminId: null,
+      name: `${name}'s Organization`, // Example organization name
+      adminId: null, // This will be updated after saving the admin
     });
 
     const savedOrganization = await newOrganization.save();
 
+    // Create the admin user and link it to the organization
     const newAdmin = new User({
       name,
       email,
       password: hashedPassword,
       role: "admin",
-      organizations: [
-        { organizationId: savedOrganization._id, status: "Active" },
-      ],
+      organizationId: savedOrganization._id,
     });
 
     const savedAdmin = await newAdmin.save();
 
+    // Update the organization with its admin's ID
     savedOrganization.adminId = savedAdmin._id;
     await savedOrganization.save();
 
@@ -82,11 +80,11 @@ router.post("/register/admin", async (req, res) => {
     });
   } catch (error) {
     console.error("Error registering Admin:", error);
-    res
-      .status(500)
-      .json({ message: "Error registering Admin", error: error.message });
+    res.status(500).json({ message: "Error registering Admin", error });
   }
 });
+
+// Login a user
 
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -103,13 +101,11 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const activeOrg = user.organizations.find((org) => org.status === "Active");
-
     const token = jwt.sign(
       {
         id: user._id,
         role: user.role,
-        organizationId: activeOrg ? activeOrg.organizationId : null,
+        organizationId: user.role === "admin" ? user._id : user.organizationId,
       },
       JWT_SECRET,
       { expiresIn: "1h" }
@@ -119,63 +115,19 @@ router.post("/login", async (req, res) => {
       _id: user._id,
       token,
       role: user.role,
-      organizationId: activeOrg ? activeOrg.organizationId : null,
+      organizationId: user.role === "admin" ? user._id : user.organizationId,
       passwordChangeRequired: user.passwordChangeRequired,
-      organizations: user.organizations,
     });
   } catch (error) {
     console.error("Error logging in:", error);
-    res.status(500).json({ message: "Error logging in", error: error.message });
+    res.status(500).json({ message: "Error logging in", error });
   }
 });
 
+// Logout a user (optional server-side logic)
 router.post("/logout", (req, res) => {
+  // For JWT-based authentication, logout is typically handled on the client side by deleting the token.
   res.status(200).json({ message: "Logout successful" });
-});
-
-router.post("/link-account", authMiddleware, async (req, res) => {
-  try {
-    const { provider, externalId } = req.body;
-    const updatedUser = await linkExternalAccount(
-      req.user.id,
-      provider,
-      externalId
-    );
-    res
-      .status(200)
-      .json({ message: "Account linked successfully", user: updatedUser });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error linking account", error: error.message });
-  }
-});
-
-router.post("/switch-organization", authMiddleware, async (req, res) => {
-  try {
-    const { organizationId } = req.body;
-    const newOrg = await switchOrganization(req.user.id, organizationId);
-    const token = jwt.sign(
-      {
-        id: req.user.id,
-        role: req.user.role,
-        organizationId: newOrg.organizationId,
-      },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    res
-      .status(200)
-      .json({
-        message: "Organization switched successfully",
-        token,
-        organizationId: newOrg.organizationId,
-      });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error switching organization", error: error.message });
-  }
 });
 
 export default router;
