@@ -1,18 +1,39 @@
-// models/User.js
 import mongoose from "mongoose";
 
-const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
-  email: { type: String, unique: true, sparse: true },
-  password: { type: String, required: true },
-  role: {
-    type: String,
-    enum: ["superAdmin", "admin", "endUser"],
-    required: true,
+const UserSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, unique: true, sparse: true },
+    password: { type: String, required: true },
+    role: {
+      type: String,
+      enum: ["superAdmin", "admin", "endUser"],
+      required: true,
+    },
+    passwordChangeRequired: { type: Boolean, default: false },
+    phoneNumber: { type: String, unique: true, sparse: true },
+    externalAccounts: [
+      {
+        provider: { type: String, enum: ["Google", "Microsoft"] },
+        externalId: { type: String },
+      },
+    ],
+    organizations: [
+      {
+        organizationId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Organization",
+        },
+        teacherId: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
+        status: {
+          type: String,
+          enum: ["Active", "Inactive"],
+          default: "Active",
+        },
+      },
+    ],
   },
-  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" },
-  passwordChangeRequired: { type: Boolean, default: false },
-});
+  { timestamps: true }
+);
 
 export const User = mongoose.model("User", UserSchema);

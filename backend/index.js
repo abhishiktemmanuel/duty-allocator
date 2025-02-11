@@ -1,10 +1,12 @@
 require("dotenv").config();
 const job = require("./corn.js");
 const express = require("express");
+const job = require("./corn.js");
 const app = express();
 const port = 0;
 job.start();
 
+job.start();
 app.get("/", (req, res) => {
   res.send("Server Running");
 });
