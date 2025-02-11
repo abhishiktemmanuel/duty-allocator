@@ -36,6 +36,8 @@ const TeacherForm = ({ onTeacherAdded }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedSchool, setSelectedSchool] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -69,23 +71,28 @@ const TeacherForm = ({ onTeacherAdded }) => {
   }, [formState.isSubmitSuccessful, reset]);
 
   const onSubmit = async (formData) => {
-    const payload = {
-      name: formData.name,
-      subjects: formData.subjects.map((sub) => sub.value),
-      school: formData.school.value,
-    };
-
+    setSubmitting(true);
     try {
+      const payload = {
+        name: formData.name,
+        subjects: formData.subjects.map((sub) => sub.value),
+        school: formData.school?.value,
+      };
+  
       await submitTeacher(payload);
       setSuccessMessage("Teacher added successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
       if (onTeacherAdded) onTeacherAdded();
+      reset();
     } catch (error) {
       console.error("Failed to add teacher:", error);
       setErrorMessage("Failed to submit the form. Please try again later.");
       setTimeout(() => setErrorMessage(""), 3000);
+    } finally {
+      setSubmitting(false);
     }
   };
+  
 
   const handleAddSubject = async (newSubject) => {
     try {
@@ -181,15 +188,16 @@ const TeacherForm = ({ onTeacherAdded }) => {
       </div>
 
       <div className="flex justify-end pt-4">
-        <button
-          type="submit"
-          className="w-full sm:w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 
-                   focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 
-                   sm:px-5 py-2 sm:py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 
-                   dark:focus:ring-blue-800"
-        >
-          Submit
-        </button>
+      <button
+  type="submit"
+  disabled={submitting}
+  className={`w-full sm:w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 
+             focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 
+             sm:px-5 py-2 sm:py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 
+             dark:focus:ring-blue-800 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+>
+  {submitting ? 'Submitting...' : 'Submit'}
+</button>
       </div>
     </div>
   </form>

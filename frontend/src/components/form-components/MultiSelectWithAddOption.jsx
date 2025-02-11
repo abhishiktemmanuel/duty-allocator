@@ -1,40 +1,22 @@
-import { useState, useEffect } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import PropTypes from 'prop-types';
 
 const MultiSelectWithAddOption = ({
-  options: initialOptions = [],
+  options = [],
   onOptionCreate,
   onSelectionChange,
   placeholder = 'Select or create options...',
-  value
+  value = []
 }) => {
-  const [options, setOptions] = useState(initialOptions);
-  const [selectedOptions, setSelectedOptions] = useState(value || []);
-
-  useEffect(() => {
-    setOptions(initialOptions);
-  }, [initialOptions]);
-
-  // Add this useEffect to sync with external value prop
-  useEffect(() => {
-    setSelectedOptions(value || []);
-  }, [value]);
-
   const handleCreateOption = async (inputValue) => {
     if (onOptionCreate) {
-      const createdOption = await onOptionCreate({ label: inputValue });
-      setOptions((prev) => [...prev, createdOption]);
-      const newSelectedOptions = [...selectedOptions, createdOption];
-      setSelectedOptions(newSelectedOptions);
-      if (onSelectionChange) onSelectionChange(newSelectedOptions);
+      try {
+        const createdOption = await onOptionCreate({ label: inputValue });
+        onSelectionChange([...value, createdOption]);
+      } catch (error) {
+        console.error("Option creation failed:", error);
+      }
     }
-  };
-
-  const handleChange = (selected) => {
-    const newSelected = selected || [];
-    setSelectedOptions(newSelected);
-    if (onSelectionChange) onSelectionChange(newSelected);
   };
 
   return (
@@ -42,8 +24,8 @@ const MultiSelectWithAddOption = ({
       <CreatableSelect
         isMulti
         options={options}
-        value={selectedOptions}
-        onChange={handleChange}
+        value={value}
+        onChange={(selected) => onSelectionChange(selected || [])}
         onCreateOption={handleCreateOption}
         placeholder={placeholder}
         className="text-gray-800 text-left indent-2"
@@ -57,7 +39,7 @@ const MultiSelectWithAddOption = ({
             '&:hover': { borderColor: '#3b82f6' },
           }),
         }}
-        isClearable={true}
+        isClearable
       />
     </div>
   );
