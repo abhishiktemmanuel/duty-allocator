@@ -393,3 +393,34 @@ export const updateProfile = async (profileData) => {
     throw error;
   }
 };
+
+export const fetchStandards = async () => {
+  try {
+    const response = await API.get("/schedule/standard");
+    return response.data.message;
+  } catch (error) {
+    console.error(
+      "Error fetching standard:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch standard"
+    );
+  }
+};
+
+export const addStandard = async (name) => {
+  try {
+    const response = await API.post("/schedule/addStandard", { name });
+    if (!response.data || !response.data.data) {
+      throw new Error("Invalid response format from server");
+    }
+    return response.data.data;
+  } catch (error) {
+    console.error(
+      "Error adding standard:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(error.response?.data?.message || "Failed to add standard");
+  }
+};
