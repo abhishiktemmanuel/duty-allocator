@@ -1,16 +1,21 @@
 import { useEffect, useState } from "react";
-import { fetchTeachers, deleteTeacher, updateTeacher } from "../../services/backendApi";
+import { fetchTeachers, deleteTeacher, updateTeacher, fetchSubjects, fetchSchools } from "../../services/backendApi";
 import { exportToCSV } from '../../services/csvExport';
-
+import MultiSelectWithAddOption from "../form-components/MultiSelectWithAddOption.jsx";
+import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOption.jsx";
 
 const TeacherTable = () => {
   const [teachers, setTeachers] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [editingTeacher, setEditingTeacher] = useState(null);
+  const [editingTeacherId, setEditingTeacherId] = useState(null);
 
   useEffect(() => {
     loadTeachers();
+    loadSubjects();
+    loadSchools();
   }, []);
 
   const loadTeachers = async () => {
@@ -23,6 +28,26 @@ const TeacherTable = () => {
       setError('Add teachers, no data found to display');
       setTeachers([]);
       setLoading(false);
+    }
+  };
+
+  const loadSubjects = async () => {
+    try {
+      const subjectsData = await fetchSubjects();
+      setSubjects(subjectsData.map(sub => ({ label: sub.name, value: sub._id })));
+    } catch (error) {
+      console.error('Error loading subjects:', error);
+      setError('Failed to load subjects');
+    }
+  };
+
+  const loadSchools = async () => {
+    try {
+      const schoolsData = await fetchSchools();
+      setSchools(schoolsData.map(school => ({ label: school.name, value: school._id })));
+    } catch (error) {
+      console.error('Error loading schools:', error);
+      setError('Failed to load schools');
     }
   };
 
@@ -45,15 +70,15 @@ const TeacherTable = () => {
     });
   };
 
-  const handleEdit = (teacher) => {
-    setEditingTeacher(teacher);
+  const handleEdit = (teacherId) => {
+    setEditingTeacherId(teacherId);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+  const handleUpdate = async (teacherId) => {
     try {
-      await updateTeacher(editingTeacher._id, editingTeacher);
-      setEditingTeacher(null);
+      const teacherToUpdate = teachers.find(t => t._id === teacherId);
+      await updateTeacher(teacherId, teacherToUpdate);
+      setEditingTeacherId(null);
       await loadTeachers();
     } catch (err) {
       console.error('Error updating teacher:', err);
@@ -73,12 +98,12 @@ const TeacherTable = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditingTeacher(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleInputChange = (teacherId, field, value) => {
+    setTeachers(prevTeachers =>
+      prevTeachers.map(teacher =>
+        teacher._id === teacherId ? { ...teacher, [field]: value } : teacher
+      )
+    );
   };
 
   if (loading) {
@@ -108,46 +133,7 @@ const TeacherTable = () => {
         </button>
       </div>
 
-      {/* Edit Modal */}
-      {editingTeacher && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg max-w-md w-full">
-            <h2 className="text-lg sm:text-xl font-bold mb-4 dark:text-white">Edit Teacher</h2>
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={editingTeacher.name}
-                  onChange={handleInputChange}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingTeacher(null)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto shadow-md rounded-lg">
+      <div className="overflow-x-auto shadow-md rounded-lg">
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
@@ -164,25 +150,73 @@ const TeacherTable = () => {
                   key={teacher._id}
                   className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
-                  <td className="py-4 px-6 font-medium">{teacher.name}</td>
-                  <td className="py-4 px-6">
-                    <div className="flex flex-wrap gap-1">
-                      {teacher.subjects.map((subject, index) => (
-                        <span key={index} className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded">
-                          {subject.name}
-                        </span>
-                      ))}
-                    </div>
+                  <td className="py-4 px-6 font-medium">
+                    {editingTeacherId === teacher._id ? (
+                      <input
+                        type="text"
+                        value={teacher.name}
+                        onChange={(e) => handleInputChange(teacher._id, 'name', e.target.value)}
+                        className="w-full p-2 border rounded text-base"
+                      />
+                    ) : (
+                      teacher.name
+                    )}
                   </td>
-                  <td className="py-4 px-6">{teacher.school?.name}</td>
+                  <td className="py-4 px-6">
+                    {editingTeacherId === teacher._id ? (
+                      <MultiSelectWithAddOption
+                        options={subjects}
+                        value={teacher.subjects}
+                        onSelectionChange={(selectedList) => handleInputChange(teacher._id, 'subjects', selectedList)}
+                        className="w-full text-base"
+                      />
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {teacher.subjects.map((subject, index) => (
+                          <span key={index} className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded">
+                            {subject.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="py-4 px-6">
+                    {editingTeacherId === teacher._id ? (
+                      <SingleSelectWithAddOption
+                        options={schools}
+                        value={teacher.school}
+                        onSelectionChange={(selectedOption) => handleInputChange(teacher._id, 'school', selectedOption)}
+                        className="w-full text-base"
+                      />
+                    ) : (
+                      teacher.school?.name
+                    )}
+                  </td>
                   <td className="py-4 px-6">
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(teacher)}
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
-                      >
-                        Edit
-                      </button>
+                      {editingTeacherId === teacher._id ? (
+                        <>
+                          <button
+                            onClick={() => handleUpdate(teacher._id)}
+                            className="text-green-600 dark:text-green-400 hover:underline text-sm font-medium"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingTeacherId(null)}
+                            className="text-gray-600 dark:text-gray-400 hover:underline text-sm font-medium"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleEdit(teacher._id)}
+                          className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                      )}
                       <button
                         onClick={() => handleDelete(teacher._id)}
                         className="text-red-600 dark:text-red-400 hover:underline text-sm font-medium"
@@ -200,59 +234,6 @@ const TeacherTable = () => {
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-4">
-        {Array.isArray(teachers) && teachers.length > 0 ? (
-          teachers.map((teacher) => (
-            <div 
-              key={teacher._id}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-3"
-            >
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium text-gray-900 dark:text-white">
-                  {teacher.school?.name}
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(teacher)}
-                    className="text-blue-600 dark:text-blue-400 text-sm font-medium"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(teacher._id)}
-                    className="text-red-600 dark:text-red-400 text-sm font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-gray-900 dark:text-white">{teacher.name}</p>
-              </div>
-
-              <div>
-                <div className="flex flex-wrap gap-1">
-                  {teacher.subjects.map((subject, index) => (
-                    <span 
-                      key={index}
-                      className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded"
-                    >
-                      {subject.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-            No teachers found
-          </div>
-        )}
       </div>
     </div>
   );

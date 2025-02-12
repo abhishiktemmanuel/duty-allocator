@@ -177,10 +177,76 @@ const deleteExamSchedule = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Exam schedule deleted successfully"));
 });
 
+const addBulkExamSchedules = asyncHandler(async (req, res) => {
+  const { schedules } = req.body;
+
+  if (!schedules || !Array.isArray(schedules)) {
+    throw new ApiError(400, "Schedules array is required");
+  }
+
+  const ExamSchedule = req.models.ExamSchedule;
+  const results = [];
+  const errors = [];
+
+  console.log("Starting bulk upload of schedules..."); // Debugging
+
+  // Process schedules in parallel
+  await Promise.all(
+    schedules.map(async (schedule) => {
+      try {
+        console.log("Processing schedule:", schedule); // Debugging
+
+        const { subject, date, shift, rooms, standard } = schedule;
+
+        // Validate existing schedule
+        const existing = await ExamSchedule.findOne({
+          subject,
+          date: new Date(date),
+          shift,
+        });
+
+        if (existing) {
+          console.log("Schedule already exists:", schedule); // Debugging
+          errors.push({ schedule, error: "Schedule already exists" });
+          return;
+        }
+
+        // Create new schedule
+        const newSchedule = await ExamSchedule.create({
+          subject,
+          date: new Date(date),
+          shift,
+          rooms,
+          standard,
+        });
+
+        console.log("Schedule created successfully:", newSchedule); // Debugging
+        results.push(newSchedule);
+      } catch (error) {
+        console.error("Error creating schedule:", error); // Debugging
+        errors.push({ schedule, error: error.message });
+      }
+    })
+  );
+
+  console.log("Bulk upload completed. Results:", results); // Debugging
+  console.log("Errors during bulk upload:", errors); // Debugging
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        { successCount: results.length, errorCount: errors.length, errors },
+        "Bulk upload completed"
+      )
+    );
+});
 export {
   addExamDate,
   getAllExamSchedules,
   fetchAllExamSchedules,
   editExamSchedule,
   deleteExamSchedule,
+  addBulkExamSchedules,
 };

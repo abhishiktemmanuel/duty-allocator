@@ -411,7 +411,7 @@ export const fetchStandards = async () => {
 
 export const addStandard = async (name) => {
   try {
-    const response = await API.post("/schedule/addStandard", { name });
+    const response = await API.post("/schedules/addStandard", { name });
     if (!response.data || !response.data.data) {
       throw new Error("Invalid response format from server");
     }
@@ -422,5 +422,23 @@ export const addStandard = async (name) => {
       error.response?.data?.message || error.message
     );
     throw new Error(error.response?.data?.message || "Failed to add standard");
+  }
+};
+
+export const submitBulkSchedules = async (schedules) => {
+  try {
+    const response = await API.post("/schedules/bulk", { schedules });
+    if (!response.data || !response.data.data) {
+      throw new Error("Invalid response format from server");
+    }
+    return response.data.data;
+  } catch (error) {
+    console.error(
+      "Error adding bulk schedules:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to add bulk schedules"
+    );
   }
 };
