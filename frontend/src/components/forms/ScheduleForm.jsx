@@ -388,34 +388,32 @@ const ScheduleForm = ({ onScheduleAdded }) => {
               error={errors.rooms}
             />
           </div>
+          <div className="absolute bottom-0 right-0">
 
           <button
             type="submit"
-            className="absolute bottom-0 right-0 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className=" text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           >
             Submit
           </button>
-        </div>
-      </form>
-
-      {/* CSV Upload Section */}
-      <div className="mt-6 border-t pt-6">
-        <button
+          <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          className="  bg-green-500 text-white font-medium rounded-lg text-sm px-5 ml-3 py-2.5 hover:bg-green-600"
         >
           Import CSV
         </button>
-        <p className="mt-2 text-sm text-gray-500">
-          CSV format: subject,date,shift,rooms,standard (rooms comma-separated)
-        </p>
-      </div>
+        </div>
+        </div>
+      </form>
 
       {/* Modal Overlay */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4">Upload CSV File</h3>
+            <p className="mt-2 text-sm text-gray-500">
+          CSV format: subject,date,shift,rooms,standard (rooms comma-separated)
+        </p>
             <div
               className="border-2 border-dashed border-gray-300 p-6 text-center cursor-pointer"
               onDrop={handleFileDrop}
