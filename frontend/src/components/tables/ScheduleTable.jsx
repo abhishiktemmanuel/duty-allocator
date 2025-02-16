@@ -38,23 +38,36 @@ const ScheduleTable = () => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     loadSchedules();
     loadSubjects();
-    
+
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleInputChange = (e, field) => {
     const { value } = e.target;
-    setEditingSchedule(prev => ({
-      ...prev,
-      [field]: field === 'subject' 
-        ? { _id: value, name: subjects.find(s => s.value === value)?.label } 
-        : value
-    }));
+    setEditingSchedule(prev => {
+      let newValue = value;
+
+      if (field === 'subject') {
+        newValue = {
+          _id: value,
+          name: subjects.find(s => s.value === value)?.label,
+        };
+      } else if (field === 'rooms') {
+        newValue = value.split(',').map(room => room.trim());
+      } else if (field === 'date') {
+        newValue = new Date(value).toISOString();
+      }
+
+      return {
+        ...prev,
+        [field]: newValue !== undefined ? newValue : value,
+      };
+    });
   };
 
   const handleExportSchedule = () => {
@@ -63,7 +76,7 @@ const ScheduleTable = () => {
       { label: 'Date', key: 'date' },
       { label: 'Shift', key: 'shift' },
       { label: 'Rooms', key: 'rooms' },
-      { label: 'Standard', key: 'standard' }
+      { label: 'Standard', key: 'standard' },
     ];
 
     const exportData = schedules.map(schedule => ({
@@ -71,12 +84,12 @@ const ScheduleTable = () => {
       date: format(new Date(schedule.date), 'dd/MM/yyyy'),
       shift: schedule.shift,
       rooms: schedule.rooms.join(', '),
-      standard: schedule.standard
+      standard: schedule.standard,
     }));
 
     exportToCSV(exportData, {
       headers,
-      filename: `exam-schedules-${format(new Date(), 'dd-MM-yyyy')}`
+      filename: `exam-schedules-${format(new Date(), 'dd-MM-yyyy')}`,
     });
   };
 
@@ -84,7 +97,7 @@ const ScheduleTable = () => {
     const schedule = schedules.find(s => s._id === scheduleId);
     setEditingSchedule(schedule);
   };
-  
+
   const handleDelete = async (scheduleId) => {
     if (window.confirm('Are you sure you want to delete this schedule?')) {
       try {
@@ -144,10 +157,13 @@ const ScheduleTable = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">
           <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg max-w-md w-full">
             <h2 className="text-lg sm:text-xl font-bold mb-4 dark:text-white">Edit Schedule</h2>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              handleUpdate(editingSchedule._id, editingSchedule);
-            }} className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleUpdate(editingSchedule._id, editingSchedule);
+              }}
+              className="space-y-4"
+            >
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
                   Subject
@@ -191,6 +207,28 @@ const ScheduleTable = () => {
                   <option value="Evening">Evening</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                  Rooms (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={editingSchedule.rooms.join(', ')}
+                  onChange={(e) => handleInputChange(e, 'rooms')}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                  Standard
+                </label>
+                <input
+                  type="text"
+                  value={editingSchedule.standard}
+                  onChange={(e) => handleInputChange(e, 'standard')}
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:border-gray-600"
+                />
+              </div>
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
@@ -227,7 +265,7 @@ const ScheduleTable = () => {
           <tbody>
             {Array.isArray(schedules) && schedules.length > 0 ? (
               schedules.map((schedule) => (
-                <tr 
+                <tr
                   key={schedule._id}
                   className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
@@ -235,7 +273,7 @@ const ScheduleTable = () => {
                     // Edit mode
                     <>
                       <td className="py-4 px-6">
-                        <select 
+                        <select
                           value={editingSchedule.subject._id}
                           onChange={(e) => handleInputChange(e, 'subject')}
                           className="border rounded px-2 py-1 w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -248,7 +286,7 @@ const ScheduleTable = () => {
                         </select>
                       </td>
                       <td className="py-4 px-6">
-                        <input 
+                        <input
                           type="date"
                           value={format(new Date(editingSchedule.date), 'yyyy-MM-dd')}
                           onChange={(e) => handleInputChange(e, 'date')}
@@ -256,7 +294,7 @@ const ScheduleTable = () => {
                         />
                       </td>
                       <td className="py-4 px-6">
-                        <select 
+                        <select
                           value={editingSchedule.shift}
                           onChange={(e) => handleInputChange(e, 'shift')}
                           className="border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -266,7 +304,7 @@ const ScheduleTable = () => {
                         </select>
                       </td>
                       <td className="py-4 px-6">
-                        <input 
+                        <input
                           type="text"
                           value={editingSchedule.rooms.join(', ')}
                           onChange={(e) => handleInputChange(e, 'rooms')}
@@ -274,7 +312,7 @@ const ScheduleTable = () => {
                         />
                       </td>
                       <td className="py-4 px-6">
-                        <input 
+                        <input
                           type="text"
                           value={editingSchedule.standard}
                           onChange={(e) => handleInputChange(e, 'standard')}
@@ -306,18 +344,20 @@ const ScheduleTable = () => {
                         {format(new Date(schedule.date), 'dd/MM/yyyy')}
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          schedule.shift === 'Morning' 
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            schedule.shift === 'Morning'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
                           {schedule.shift}
                         </span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex flex-wrap gap-1">
                           {schedule.rooms.map((room, index) => (
-                            <span 
+                            <span
                               key={index}
                               className="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300"
                             >
@@ -358,11 +398,11 @@ const ScheduleTable = () => {
         </table>
       </div>
 
-            {/* Mobile Card View */}
-            <div className="md:hidden space-y-4">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
         {Array.isArray(schedules) && schedules.length > 0 ? (
           schedules.map((schedule) => (
-            <div 
+            <div
               key={schedule._id}
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-3"
             >
@@ -385,7 +425,7 @@ const ScheduleTable = () => {
                   </button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Date:</span>
@@ -396,11 +436,13 @@ const ScheduleTable = () => {
                 <div>
                   <span className="text-gray-500 dark:text-gray-400">Shift:</span>
                   <p>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      schedule.shift === 'Morning' 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        schedule.shift === 'Morning'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
                       {schedule.shift}
                     </span>
                   </p>
@@ -413,7 +455,7 @@ const ScheduleTable = () => {
                   <span className="text-gray-500 dark:text-gray-400">Rooms:</span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {schedule.rooms.map((room, index) => (
-                      <span 
+                      <span
                         key={index}
                         className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded"
                       >
