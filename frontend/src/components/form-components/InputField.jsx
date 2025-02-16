@@ -9,12 +9,13 @@ const InputField = ({ label, type, register, error, placeholder, className, ...p
     )}
     <input
       type={type}
-      placeholder={placeholder} // Accept and apply the placeholder
+      placeholder={placeholder}
       {...register}
       {...props}
-      className={`w-full px-3 py-1.5 bg-white text-gray-900  border border-gray-300 shadow-sm 
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                  transition duration-150 ${className}`} // Merge default and custom classes
+      className={`input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
+      focus:ring-blue-500 focus:border-blue-500 block px-3  sm:text-base${className}`} 
+
+
     />
     {error && <p className="mt-1 text-sm text-red-600">{error.message}</p>}
   </div>
@@ -26,7 +27,7 @@ InputField.propTypes = {
   register: PropTypes.object,
   error: PropTypes.object,
   placeholder: PropTypes.string,
-  className: PropTypes.string, // Added className to PropTypes
+  className: PropTypes.string,
 };
 
 export default InputField;

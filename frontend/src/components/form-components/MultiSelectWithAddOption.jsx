@@ -61,17 +61,8 @@ const MultiSelectWithAddOption = ({
         onChange={(selected) => onSelectionChange(selected || [])}
         onCreateOption={handleCreateOption}
         placeholder={placeholder}
-        className="text-gray-800 text-left indent-2"
-        styles={{
-          control: (base) => ({
-            ...base,
-            borderRadius: '20rem',
-            borderColor: '#d1d5db',
-            backgroundColor: 'white',
-            boxShadow: 'none',
-            '&:hover': { borderColor: '#3b82f6' },
-          }),
-        }}
+        className="input-field text-left"
+        classNamePrefix="input-field"
         isClearable
       />
     </div>

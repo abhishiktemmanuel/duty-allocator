@@ -32,25 +32,18 @@ const InputWithAddOption = ({ onRoomsChange, placeholder = 'Add or select rooms.
   return (
     <div className="w-full">
       <CreatableSelect
-        isMulti
-        options={inputs}
-        value={inputs}
-        onChange={handleChange}
-        onCreateOption={handleCreateInput}
-        placeholder={placeholder}
-        className="text-gray-800"
-        styles={{
-          control: (base) => ({
-            ...base,
-            borderRadius: '0.375rem',
-            borderColor: '#d1d5db',
-            boxShadow: 'none',
-            '&:hover': { borderColor: '#3b82f6' },
-          }),
-        }}
-        isClearable={true}
-        isSearchable={true}
-      />
+  isMulti
+  options={inputs}
+  value={inputs}
+  onChange={handleChange}
+  onCreateOption={handleCreateInput}
+  placeholder={placeholder}
+  className="input-field -200"
+  classNamePrefix="input-field"
+  isClearable={true}
+  isSearchable={true}
+/>
+
     </div>
   );
 };
@@ -67,4 +60,5 @@ InputWithAddOption.propTypes = {
 };
 
 export default InputWithAddOption;
+
 

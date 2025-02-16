@@ -3,7 +3,17 @@ import { NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { getTickets } from '../../services/backendApi';
 import { useAuth } from '../../context/AuthContext';
-import { FiLogOut, FiCircle, FiSquare } from 'react-icons/fi';
+import { 
+  FiLogOut, 
+  FiUsers, 
+  FiCalendar, 
+  FiClipboard, 
+  FiMessageSquare,
+  FiUser,
+  FiHome,
+  FiMenu,
+  FiX
+} from 'react-icons/fi';
 
 const Sidebar = ({ links, className = "", setToken }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,15 +21,45 @@ const Sidebar = ({ links, className = "", setToken }) => {
   const [ticketCount, setTicketCount] = useState(0);
   const { user } = useAuth();
 
-  // Keep existing useEffect hooks unchanged
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) setIsOpen(false); // Close sidebar on desktop resize
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Keep existing ticket count useEffect
+
+  const iconMap = {
+    '/teachers': <FiUsers className="w-5 h-5 mr-3" />,
+    '/schedule': <FiCalendar className="w-5 h-5 mr-3" />,
+    '/duty': <FiClipboard className="w-5 h-5 mr-3" />,
+    '/tickets': <FiMessageSquare className="w-5 h-5 mr-3" />,
+    '/profile': <FiUser className="w-5 h-5 mr-3" />,
+    '/dashboard': <FiHome className="w-5 h-5 mr-3" />,
+    '/help': <FiMessageSquare className="w-5 h-5 mr-3" />
+  };
 
   const NavContent = () => (
     <>
-      <div className="p-6 border-b border-gray-700">
+      <div className="p-6 border-b border-gray-700 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="text-2xl font-light text-gray-300">⸱⸱⸱</div>
           <h1 className="text-lg font-medium text-gray-100">nuncio</h1>
         </div>
+        {isMobile && (
+          <button
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden text-gray-400 hover:text-white"
+          >
+            <FiX className="w-6 h-6" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -29,16 +69,16 @@ const Sidebar = ({ links, className = "", setToken }) => {
             to={link.path}
             onClick={() => isMobile && setIsOpen(false)}
             className={({ isActive }) =>
-              `flex items-center px-3 py-2.5 rounded-lg transition-all 
+              `flex items-center px-4 py-3 rounded-lg transition-colors
               ${isActive 
                 ? 'text-white bg-gray-700/50' 
                 : 'text-gray-400 hover:bg-gray-700/30 hover:text-gray-200'}`
             }
           >
-            <FiCircle className="w-4 h-4 mr-3" />
+            {iconMap[link.path]}
             <span className="text-sm">{link.label}</span>
             {link.path === '/tickets' && ticketCount > 0 && (
-              <span className="ml-auto px-2 text-xs font-medium bg-gray-700 rounded-full">
+              <span className="ml-auto px-2.5 py-1 text-xs font-medium bg-gray-700 rounded-full">
                 {ticketCount}
               </span>
             )}
@@ -49,9 +89,9 @@ const Sidebar = ({ links, className = "", setToken }) => {
       <div className="p-4 border-t border-gray-700">
         <button
           onClick={() => setToken(null)}
-          className="w-full flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/30 rounded-lg group"
+          className="w-full flex items-center px-4 py-3 text-gray-400 hover:bg-gray-700/30 rounded-lg"
         >
-          <FiSquare className="w-4 h-4 mr-3 transform group-hover:rotate-12 transition-transform" />
+          <FiLogOut className="w-5 h-5 mr-3" />
           <span className="text-sm">Log Out</span>
         </button>
       </div>
@@ -60,28 +100,28 @@ const Sidebar = ({ links, className = "", setToken }) => {
 
   return (
     <>
+      {/* Mobile menu button */}
       {isMobile && (
         <button
-          onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 p-2.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300"
+          onClick={() => setIsOpen(!isOpen)}
+          className="fixed top-4 left-4 z-50 p-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300"
         >
-          <div className="space-y-1.5">
-            <span className="block w-6 h-0.5 bg-current" />
-            <span className="block w-6 h-0.5 bg-current" />
-            <span className="block w-4 h-0.5 bg-current" />
-          </div>
+          <FiMenu className="w-6 h-6" />
         </button>
       )}
 
+      {/* Sidebar */}
       <div className={`
         ${isMobile ? 'fixed inset-0 z-40 w-64' : 'w-64 h-screen fixed top-0 left-0'} 
         bg-gray-900 border-r border-gray-800/70
         flex flex-col justify-between transition-transform duration-300 ease-in-out ${className}
         ${isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0'}
+        ${!isMobile ? 'translate-x-0' : ''} // Force show on desktop
       `}>
         <NavContent />
       </div>
 
+      {/* Overlay */}
       {isMobile && isOpen && (
         <div 
           className="fixed inset-0 bg-black/30 z-30 backdrop-blur-sm"
@@ -93,6 +133,7 @@ const Sidebar = ({ links, className = "", setToken }) => {
 };
 
 // PropTypes remain the same...
+
 
 Sidebar.propTypes = {
   links: PropTypes.arrayOf(

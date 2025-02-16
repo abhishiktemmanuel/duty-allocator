@@ -151,9 +151,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
           register={register("name", { required: "Teacher's name is required" })}
           error={errors.name}
           placeholder="Teacher's name"
-          className="w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-2
-                    focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 text-sm sm:text-base"
-        />
+                 />
         {errors.name && (
           <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.name.message}</p>
         )}

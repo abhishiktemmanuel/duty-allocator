@@ -54,23 +54,15 @@ const SingleSelectWithAddOption = ({
           {label}
         </label>
       )}
-      <div className="w-full max-w-md mx-auto">
-        <CreatableSelect
+      <div className="w-full  mx-auto">
+      <CreatableSelect
           options={combinedOptions}
           value={value}
           onChange={(option) => onSelectionChange(option || null)}
           onCreateOption={handleCreateOption}
           placeholder={placeholder}
-          className="text-gray-800 text-left indent-2 input"
-          styles={{
-            control: (base) => ({
-              ...base,
-              borderRadius: "20rem",
-              borderColor: "#d1d5db",
-              boxShadow: "none",
-              "&:hover": { borderColor: "#3b82f6" },
-            }),
-          }}
+          className="input-field text-left "
+          classNamePrefix="input-field" // Add this line
           isClearable
         />
       </div>

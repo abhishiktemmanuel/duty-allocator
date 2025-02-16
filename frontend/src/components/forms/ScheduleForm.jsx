@@ -349,7 +349,8 @@ const ScheduleForm = ({ onScheduleAdded }) => {
             <select
               id="shift"
               {...register("shift", { required: "Please select a shift" })}
-              className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 indent-2 focus:ring-blue-500 focus:border-blue-500 block w-full"
+              className="input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
+      focus:ring-blue-500 focus:border-blue-500 block px-3  sm:text-base"
             >
               <option value="" disabled>Select shift</option>
               <option value="Morning">Morning</option>
@@ -371,40 +372,59 @@ const ScheduleForm = ({ onScheduleAdded }) => {
           />
         </div>
 
-        <div>
-        <div className="w-lg align mb-6">
-          <SingleSelectWithAddOption
-            options={subjects}
-            placeholder="Select subject"
-            value={watchedSubject}
-            onOptionCreate={handleAddSubject}
-            onSelectionChange={(selectedOption) => {
-              setValue("subject", selectedOption, { 
-                shouldValidate: true,
-                shouldDirty: true,
-                shouldTouch: true
-              });
-            }}
-            isSearchable={true}
-            isClearable={true}
-          />
-        </div>
-          <div className="absolute bottom-0 right-0">
 
-          <button
-            type="submit"
-            className=" text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Submit
-          </button>
-          <button
-          onClick={() => setIsModalOpen(true)}
-          className="  bg-green-500 text-white font-medium rounded-lg text-sm px-5 ml-3 py-2.5 hover:bg-green-600"
-        >
-          Import CSV
-        </button>
-        </div>
-        </div>
+        {/* <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 w-full">
+          <div className="flex-1 md:w-auto">
+
+          </div>
+          <div className="flex flex-row gap-2 w-full md:w-auto md:shrink-0">
+            <button
+              type="submit"
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 md:px-5 md:py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full md:w-auto"
+            >
+              Submit
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-green-500 text-white font-medium rounded-lg text-sm px-4 py-2 md:px-5 md:py-2.5 hover:bg-green-600 w-full md:w-auto"
+            >
+              Import CSV
+            </button>
+          </div>
+        </div> */}
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full items-baseline">
+  <div className="flex-1 min-w-0 w-full md:w-auto">
+  <SingleSelectWithAddOption
+                      options={subjects}
+                      placeholder="Select subject"
+                      value={watchedSubject}
+                      onOptionCreate={handleAddSubject}
+                      onSelectionChange={(selectedOption) => {
+                        setValue("subject", selectedOption, { 
+                          shouldValidate: true,
+                          shouldDirty: true,
+                          shouldTouch: true
+                        });
+                      }}
+                      isSearchable={true}
+                      isClearable={true}
+                    />
+  </div>
+  <div className="flex flex-row gap-2 w-full md:w-auto">
+    <button
+      type="submit"
+      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 h-[42px] md:h-auto"
+    >
+      Submit
+    </button>
+    <button
+      onClick={() => setIsModalOpen(true)}
+      className="bg-green-500 text-white font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-green-600 h-[42px] md:h-auto"
+    >
+      Import CSV
+    </button>
+  </div>
+</div>
       </form>
 
       {/* Modal Overlay */}
