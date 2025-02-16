@@ -61,7 +61,7 @@ const SingleSelectWithAddOption = ({
           onChange={(option) => onSelectionChange(option || null)}
           onCreateOption={handleCreateOption}
           placeholder={placeholder}
-          className="text-gray-800 text-left indent-2"
+          className="text-gray-800 text-left indent-2 input"
           styles={{
             control: (base) => ({
               ...base,

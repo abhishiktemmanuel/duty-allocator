@@ -306,7 +306,7 @@ const ScheduleForm = ({ onScheduleAdded }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl">
+    <div className="relative mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-xl">
       {loading && (
         <p className="text-center text-blue-500 font-semibold mb-4">Loading...</p>
       )}
@@ -324,23 +324,15 @@ const ScheduleForm = ({ onScheduleAdded }) => {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative">
-        <div>
-          <SingleSelectWithAddOption
-            options={subjects}
-            placeholder="Select subject"
-            value={watchedSubject}
-            onOptionCreate={handleAddSubject}
-            onSelectionChange={(selectedOption) => {
-              setValue("subject", selectedOption, { 
-                shouldValidate: true,
-                shouldDirty: true,
-                shouldTouch: true
-              });
-            }}
-            isSearchable={true}
-            isClearable={true}
-          />
-        </div>
+      <div>
+            <InputWithAddOption
+              value={rooms}
+              onRoomsChange={handleRoomsChange}
+              placeholder="Add rooms..."
+              error={errors.rooms}
+            />
+          </div>
+        
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <InputField
@@ -380,14 +372,23 @@ const ScheduleForm = ({ onScheduleAdded }) => {
         </div>
 
         <div>
-          <div className="w-lg align mb-6">
-            <InputWithAddOption
-              value={rooms}
-              onRoomsChange={handleRoomsChange}
-              placeholder="Add rooms..."
-              error={errors.rooms}
-            />
-          </div>
+        <div className="w-lg align mb-6">
+          <SingleSelectWithAddOption
+            options={subjects}
+            placeholder="Select subject"
+            value={watchedSubject}
+            onOptionCreate={handleAddSubject}
+            onSelectionChange={(selectedOption) => {
+              setValue("subject", selectedOption, { 
+                shouldValidate: true,
+                shouldDirty: true,
+                shouldTouch: true
+              });
+            }}
+            isSearchable={true}
+            isClearable={true}
+          />
+        </div>
           <div className="absolute bottom-0 right-0">
 
           <button

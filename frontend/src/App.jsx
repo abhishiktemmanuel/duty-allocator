@@ -87,7 +87,7 @@ function AppContent() {
             brand="My App"
             setToken={logout}
           />
-          <div className="w-full md:ml-48 md:px-26 p-8">
+          <div className="w-full md:ml-62  p-8">
             <Routes>
               {/* Admin Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'superAdmin']} hasActiveSubscription={hasActiveSubscription} />}>

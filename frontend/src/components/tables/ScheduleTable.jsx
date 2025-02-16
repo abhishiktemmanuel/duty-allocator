@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { fetchExamSchedules, deleteSchedule, updateSchedule, fetchSubjects } from '../../services/backendApi';
 import { exportToCSV } from '../../services/csvExport';
@@ -10,6 +10,10 @@ const ScheduleTable = () => {
   const [error, setError] = useState('');
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
+
+  // Ref for managing cursor position in the rooms input
+  const roomsInputRef = useRef(null);
+  const cursorPosition = useRef(null);
 
   const loadSchedules = async () => {
     try {
@@ -58,7 +62,14 @@ const ScheduleTable = () => {
           name: subjects.find(s => s.value === value)?.label,
         };
       } else if (field === 'rooms') {
-        newValue = value.split(',').map(room => room.trim());
+        // Capture cursor position before state update
+        cursorPosition.current = {
+          start: e.target.selectionStart,
+          end: e.target.selectionEnd,
+          valueBefore: e.target.value,
+        };
+        // Split by commas, trim each room, and filter out empty strings
+        newValue = value.split(',').map(room => room.trim()).filter(room => room !== '');
       } else if (field === 'date') {
         newValue = new Date(value).toISOString();
       }
@@ -69,6 +80,27 @@ const ScheduleTable = () => {
       };
     });
   };
+
+  // Adjust cursor position after state update
+  useEffect(() => {
+    if (roomsInputRef.current && cursorPosition.current !== null) {
+      const { start, end, valueBefore } = cursorPosition.current;
+      const valueAfter = roomsInputRef.current.value;
+
+      // Calculate new cursor position
+      let adjustedStart = start;
+      if (valueAfter.length < valueBefore.length) {
+        // Handle deletions
+        adjustedStart = Math.max(0, start - (valueBefore.length - valueAfter.length));
+      } else {
+        // Handle additions (e.g., auto-formatting commas)
+        adjustedStart = start + (valueAfter.length - valueBefore.length);
+      }
+
+      roomsInputRef.current.setSelectionRange(adjustedStart, adjustedStart);
+      cursorPosition.current = null; // Reset cursor tracker
+    }
+  }, [editingSchedule?.rooms]);
 
   const handleExportSchedule = () => {
     const headers = [
@@ -212,6 +244,7 @@ const ScheduleTable = () => {
                   Rooms (comma-separated)
                 </label>
                 <input
+                  ref={roomsInputRef}
                   type="text"
                   value={editingSchedule.rooms.join(', ')}
                   onChange={(e) => handleInputChange(e, 'rooms')}
@@ -305,6 +338,7 @@ const ScheduleTable = () => {
                       </td>
                       <td className="py-4 px-6">
                         <input
+                          ref={roomsInputRef}
                           type="text"
                           value={editingSchedule.rooms.join(', ')}
                           onChange={(e) => handleInputChange(e, 'rooms')}

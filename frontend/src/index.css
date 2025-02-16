@@ -2,7 +2,7 @@
 
 body {
   font-family: 'Nunito', sans-serif;
-  background-color: rgb(184, 239, 254);
+  background-color:#101828;
 }
 
 select-container {
@@ -26,3 +26,9 @@ custom-select-control:hover {
   border-color: rgb(59 130 246);
 }
 
+input-field{
+  border-radius: 0.375rem;
+  border-color: #c61313;
+  box-shadow: none;
+  &:hover { border-color: #3b82f6; }
+}
