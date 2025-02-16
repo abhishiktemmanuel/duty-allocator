@@ -1,5 +1,6 @@
 import CreatableSelect from "react-select/creatable";
 import PropTypes from "prop-types";
+import { useState } from 'react';
 
 const SingleSelectWithAddOption = ({
   label,
@@ -10,16 +11,41 @@ const SingleSelectWithAddOption = ({
   error,
   value = null
 }) => {
+  const [tempOptions, setTempOptions] = useState([]);
+
   const handleCreateOption = async (inputValue) => {
-    if (onOptionCreate) {
-      try {
-        const createdOption = await onOptionCreate({ label: inputValue });
-        onSelectionChange(createdOption);
-      } catch (error) {
-        console.error("Option creation failed:", error);
-      }
+    if (!onOptionCreate) return;
+
+    // Create temporary option
+    const tempOption = {
+      label: inputValue,
+      value: `temp-${Date.now()}`,
+      __isNew__: true
+    };
+
+    // Optimistically update local state
+    setTempOptions(prev => [...prev, tempOption]);
+    onSelectionChange(tempOption);
+
+    try {
+      // Create real option
+      const createdOption = await onOptionCreate({ label: inputValue });
+      
+      // Update selection with real option
+      onSelectionChange(createdOption);
+      
+      // Remove temporary option
+      setTempOptions(prev => prev.filter(opt => opt.value !== tempOption.value));
+    } catch (error) {
+      // Rollback on error
+      setTempOptions(prev => prev.filter(opt => opt.value !== tempOption.value));
+      onSelectionChange(null);
+      console.error("Option creation failed:", error);
     }
   };
+
+  // Combine permanent and temporary options
+  const combinedOptions = [...options, ...tempOptions];
 
   return (
     <div className="mb-4">
@@ -30,7 +56,7 @@ const SingleSelectWithAddOption = ({
       )}
       <div className="w-full max-w-md mx-auto">
         <CreatableSelect
-          options={options}
+          options={combinedOptions}
           value={value}
           onChange={(option) => onSelectionChange(option || null)}
           onCreateOption={handleCreateOption}
