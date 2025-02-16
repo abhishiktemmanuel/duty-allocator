@@ -25,7 +25,7 @@ const Sidebar = ({ links, className = "", setToken }) => {
     const checkScreenSize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      if (!mobile) setIsOpen(false); // Close sidebar on desktop resize
+      if (!mobile) setIsOpen(false);
     };
     
     checkScreenSize();
@@ -67,7 +67,7 @@ const Sidebar = ({ links, className = "", setToken }) => {
           <NavLink
             key={link.path}
             to={link.path}
-            onClick={() => isMobile && setIsOpen(false)}
+            onClick={() => setIsOpen(false)} // Always close on nav item click
             className={({ isActive }) =>
               `flex items-center px-4 py-3 rounded-lg transition-colors
               ${isActive 
@@ -100,10 +100,10 @@ const Sidebar = ({ links, className = "", setToken }) => {
 
   return (
     <>
-      {/* Mobile menu button */}
-      {isMobile && (
+      {/* Mobile menu button - only visible when sidebar is closed */}
+      {isMobile && !isOpen && (
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => setIsOpen(true)}
           className="fixed top-4 left-4 z-50 p-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300"
         >
           <FiMenu className="w-6 h-6" />
@@ -116,12 +116,11 @@ const Sidebar = ({ links, className = "", setToken }) => {
         bg-gray-900 border-r border-gray-800/70
         flex flex-col justify-between transition-transform duration-300 ease-in-out ${className}
         ${isMobile && !isOpen ? '-translate-x-full' : 'translate-x-0'}
-        ${!isMobile ? 'translate-x-0' : ''} // Force show on desktop
       `}>
         <NavContent />
       </div>
 
-      {/* Overlay */}
+      {/* Overlay - only visible on mobile when sidebar is open */}
       {isMobile && isOpen && (
         <div 
           className="fixed inset-0 bg-black/30 z-30 backdrop-blur-sm"
@@ -132,7 +131,6 @@ const Sidebar = ({ links, className = "", setToken }) => {
   );
 };
 
-// PropTypes remain the same...
 
 
 Sidebar.propTypes = {
