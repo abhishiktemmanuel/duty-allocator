@@ -131,3 +131,98 @@ router.post("/logout", (req, res) => {
 });
 
 export default router;
+
+// Add these routes after your existing routes
+
+// Password Update Route
+router.post("/update-password", async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash and update new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+    user.passwordChangeRequired = false;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Error updating password:", error);
+    res.status(500).json({ message: "Error updating password", error });
+  }
+});
+
+// Password Reset Request Route
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate password reset token
+    const resetToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // In a production environment, you would:
+    // 1. Save the reset token and its expiry in the database
+    // 2. Send an email to the user with a reset link containing the token
+
+    // For demonstration, we'll just return the token
+    res.status(200).json({
+      message: "Password reset instructions sent",
+      resetToken, // In production, remove this
+    });
+  } catch (error) {
+    console.error("Error requesting password reset:", error);
+    res.status(500).json({ message: "Error requesting password reset", error });
+  }
+});
+
+// Password Reset Confirmation Route
+router.post("/reset-password", async (req, res) => {
+  const { resetToken, newPassword } = req.body;
+
+  try {
+    // Verify reset token
+    const decoded = jwt.verify(resetToken, JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Hash and update new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    user.passwordChangeRequired = false;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+    }
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Error resetting password", error });
+  }
+});

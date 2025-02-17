@@ -361,7 +361,32 @@ const ScheduleForm = ({ onScheduleAdded }) => {
             )}
           </div>
 
-          <InputField
+          <select 
+              id="standard"
+              {...register("standard", { required: "Standard is required" })}
+              placeholder="Select standard"
+              className="input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
+      focus:ring-blue-500 focus:border-blue-500 block px-3 sm:text-base"
+              >
+                <option value="" disabled>Select standard</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="High School">High School</option>
+                <option value="First Year">First Year</option>
+                <option value="1st">1st</option>
+                <option value="2nd">2nd</option>
+                <option value="3rd">3rd</option>
+                <option value="4th">4th</option>
+                <option value="5th">5th</option>
+                <option value="6th">6th</option>
+                <option value="7th">7th</option>
+                <option value="8th">8th</option>
+                <option value="9th">9th</option>
+                <option value="10th">10th</option>
+                <option value="11th">11th</option>
+                <option value="12th">12th</option>
+              </select>
+
+          {/* <InputField
             id="scheduleStandard"
             type="text"
             register={register("standard", { required: "Standard is required" })}
@@ -369,62 +394,41 @@ const ScheduleForm = ({ onScheduleAdded }) => {
             placeholder="Enter standard"
             className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 text-left indent-2 border-radius-[20rem]
                       focus:ring-blue-500 focus:border-blue-500 block w-full"
-          />
+          /> */}
         </div>
-
-
-        {/* <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 w-full">
-          <div className="flex-1 md:w-auto">
-
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full items-baseline">
+          <div className="flex-1 min-w-0 w-full md:w-auto">
+          <SingleSelectWithAddOption
+                              options={subjects}
+                              placeholder="Select subject"
+                              value={watchedSubject}
+                              onOptionCreate={handleAddSubject}
+                              onSelectionChange={(selectedOption) => {
+                                setValue("subject", selectedOption, { 
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                  shouldTouch: true
+                                });
+                              }}
+                              isSearchable={true}
+                              isClearable={true}
+                            />
           </div>
-          <div className="flex flex-row gap-2 w-full md:w-auto md:shrink-0">
+          <div className="flex flex-row gap-2 w-full md:w-auto">
             <button
               type="submit"
-              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 md:px-5 md:py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full md:w-auto"
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 h-[42px] md:h-auto"
             >
               Submit
             </button>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-green-500 text-white font-medium rounded-lg text-sm px-4 py-2 md:px-5 md:py-2.5 hover:bg-green-600 w-full md:w-auto"
+              className="bg-green-500 text-white font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-green-600 h-[42px] md:h-auto"
             >
               Import CSV
             </button>
           </div>
-        </div> */}
-        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full items-baseline">
-  <div className="flex-1 min-w-0 w-full md:w-auto">
-  <SingleSelectWithAddOption
-                      options={subjects}
-                      placeholder="Select subject"
-                      value={watchedSubject}
-                      onOptionCreate={handleAddSubject}
-                      onSelectionChange={(selectedOption) => {
-                        setValue("subject", selectedOption, { 
-                          shouldValidate: true,
-                          shouldDirty: true,
-                          shouldTouch: true
-                        });
-                      }}
-                      isSearchable={true}
-                      isClearable={true}
-                    />
-  </div>
-  <div className="flex flex-row gap-2 w-full md:w-auto">
-    <button
-      type="submit"
-      className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 h-[42px] md:h-auto"
-    >
-      Submit
-    </button>
-    <button
-      onClick={() => setIsModalOpen(true)}
-      className="bg-green-500 text-white font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-green-600 h-[42px] md:h-auto"
-    >
-      Import CSV
-    </button>
-  </div>
-</div>
+        </div>
       </form>
 
       {/* Modal Overlay */}

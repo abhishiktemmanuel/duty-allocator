@@ -50,7 +50,7 @@ const Sidebar = ({ links, className = "", setToken }) => {
     <>
       <div className="p-6 border-b border-gray-700 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <h1 className="text-3xl pl-2 font-medium text-white">nuncio</h1>
+          <h1 className="text-3xl font-extrabold pl-2  text-white">nuncio</h1>
         </div>
         {isMobile && (
           <button

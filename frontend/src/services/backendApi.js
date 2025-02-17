@@ -56,6 +56,58 @@ export const logoutUser = () => {
   localStorage.removeItem("token");
 };
 
+export const updatePassword = async (userId, passwordData) => {
+  try {
+    const response = await API.post("/auth/update-password", {
+      userId,
+      currentPassword: passwordData.currentPassword,
+      newPassword: passwordData.newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating password:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to update password"
+    );
+  }
+};
+
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await API.post("/auth/forgot-password", { email });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error requesting password reset:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to request password reset"
+    );
+  }
+};
+
+export const resetPassword = async (resetToken, newPassword) => {
+  try {
+    const response = await API.post("/auth/reset-password", {
+      resetToken,
+      newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error resetting password:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to reset password"
+    );
+  }
+};
+
 // Subject APIs
 export const fetchSubjects = async () => {
   try {
