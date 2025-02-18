@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 // Helper function to fetch all exam schedules
 const fetchAllExamSchedules = async (models) => {
@@ -36,6 +37,10 @@ const addExamDate = asyncHandler(async (req, res) => {
         rooms: !rooms?.length ? "Rooms are missing" : undefined,
       },
     });
+  }
+  // Validate subject ID format
+  if (!mongoose.Types.ObjectId.isValid(subject)) {
+    throw new ApiError(400, "Invalid subject ID format");
   }
 
   // Validate shift value
