@@ -19,11 +19,11 @@ const calculateEndDate = (type) => {
 const getTotalCount = (type) => {
   switch (type) {
     case "monthly":
-      return 12;
+      return 120;
     case "quarterly":
-      return 4;
+      return 40;
     case "yearly":
-      return 1;
+      return 10;
     default:
       throw new Error("Invalid subscription type");
   }
@@ -137,6 +137,7 @@ export const razorpayWebhookHandler = async (req, res) => {
     if (digest !== req.headers["x-razorpay-signature"]) {
       return res.status(403).json({ message: "Invalid signature" });
     }
+    console.log("Webhook received:", req.body);
 
     const event = req.body.event;
     const subscriptionId = req.body.payload.subscription.entity.id;
