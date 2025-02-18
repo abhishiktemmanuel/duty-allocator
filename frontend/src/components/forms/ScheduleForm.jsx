@@ -7,6 +7,12 @@ import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOpt
 import InputWithAddOption from "../form-components/InputWithAddOption.jsx";
 import { fetchSubjects, addSubject, submitSchedule, submitBulkSchedules } from "../../services/backendApi.js";
 
+const getOrdinal = (n) => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+};
+
 const ScheduleForm = ({ onScheduleAdded }) => {
   const {
     register,
@@ -326,114 +332,117 @@ const ScheduleForm = ({ onScheduleAdded }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative">
-      <div>
-            <InputWithAddOption
-              value={rooms}
-              onRoomsChange={handleRoomsChange}
-              placeholder="Add rooms..."
-              error={errors.rooms}
-            />
-          </div>
-        
+<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+  {/* Rooms Row - Full Width */}
+  <div className="w-full">
+    <InputWithAddOption
+      value={rooms}
+      onRoomsChange={handleRoomsChange}
+      placeholder="Add rooms..."
+      error={errors.rooms}
+    />
+  </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <InputField
-            id="scheduleDate"
-            type="date"
-            register={register("date", { required: "Please select a date" })}
-            error={errors.date}
-            placeholder="Select date"
-            className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 text-left indent-2 border-radius-[20rem]
-                      focus:ring-blue-500 focus:border-blue-500 block w-full"
-          />
+  {/* Subject + Standard Row */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Subject Column */}
+    <div className="w-full">
+      <SingleSelectWithAddOption
+        options={subjects}
+        placeholder="Select subject"
+        value={watchedSubject}
+        onOptionCreate={handleAddSubject}
+        onSelectionChange={(selectedOption) => {
+          setValue("subject", selectedOption, { 
+            shouldValidate: true,
+            shouldDirty: true,
+            shouldTouch: true
+          });
+        }}
+        isSearchable={true}
+        isClearable={true}
+      />
+    </div>
 
-          <div>
-            <select
-              id="shift"
-              {...register("shift", { required: "Please select a shift" })}
-              className="input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
+    {/* Standard Column */}
+    <div className="w-full">
+      <select 
+        id="standard"
+        {...register("standard", { required: "Standard is required" })}
+        className="input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
       focus:ring-blue-500 focus:border-blue-500 block px-3  sm:text-base"
-            >
-              <option value="" disabled>Select shift</option>
-              <option value="Morning">Morning</option>
-              <option value="Evening">Evening</option>
-            </select>
-            {errors.shift && (
-              <p className="mt-1 text-sm text-red-600">{errors.shift.message}</p>
-            )}
-          </div>
+      >
+        <option value="" disabled>Select standard</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="High School">High School</option>
+        <option value="First Year">First Year</option>
+        {[...Array(12)].map((_, i) => (
+          <option key={i+1} value={`${i+1}${getOrdinal(i+1)}`}>
+            {i+1}{getOrdinal(i+1)}
+          </option>
+        ))}
+      </select>
+      {errors.standard && (
+        <p className="mt-1 text-sm text-red-600">{errors.standard.message}</p>
+      )}
+    </div>
+  </div>
 
-          <select 
-              id="standard"
-              {...register("standard", { required: "Standard is required" })}
-              placeholder="Select standard"
-              className="input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
-      focus:ring-blue-500 focus:border-blue-500 block px-3 sm:text-base"
-              >
-                <option value="" disabled>Select standard</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="High School">High School</option>
-                <option value="First Year">First Year</option>
-                <option value="1st">1st</option>
-                <option value="2nd">2nd</option>
-                <option value="3rd">3rd</option>
-                <option value="4th">4th</option>
-                <option value="5th">5th</option>
-                <option value="6th">6th</option>
-                <option value="7th">7th</option>
-                <option value="8th">8th</option>
-                <option value="9th">9th</option>
-                <option value="10th">10th</option>
-                <option value="11th">11th</option>
-                <option value="12th">12th</option>
-              </select>
+  {/* Date + Shift Row */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* Date Input */}
+    <div className="w-full">
+      <InputField
+        id="scheduleDate"
+        type="date"
+        register={register("date", { required: "Please select a date" })}
+        error={errors.date}
+        className="w-full bg-white border rounded-[20rem] border-gray-300 text-gray-800 px-3 py-2
+                   focus:ring-blue-500 focus:border-blue-500"
+      />
+    </div>
 
-          {/* <InputField
-            id="scheduleStandard"
-            type="text"
-            register={register("standard", { required: "Standard is required" })}
-            error={errors.standard}
-            placeholder="Enter standard"
-            className="bg-white border rounded-[20rem] border-gray-300 text-gray-800 text-left indent-2 border-radius-[20rem]
-                      focus:ring-blue-500 focus:border-blue-500 block w-full"
-          /> */}
-        </div>
-        <div className="flex flex-col md:flex-row gap-2 md:gap-4 w-full items-baseline">
-          <div className="flex-1 min-w-0 w-full md:w-auto">
-          <SingleSelectWithAddOption
-                              options={subjects}
-                              placeholder="Select subject"
-                              value={watchedSubject}
-                              onOptionCreate={handleAddSubject}
-                              onSelectionChange={(selectedOption) => {
-                                setValue("subject", selectedOption, { 
-                                  shouldValidate: true,
-                                  shouldDirty: true,
-                                  shouldTouch: true
-                                });
-                              }}
-                              isSearchable={true}
-                              isClearable={true}
-                            />
-          </div>
-          <div className="flex flex-row gap-2 w-full md:w-auto">
-            <button
-               type="submit" 
-               disabled={isAddingSubject}
-               className={`... ${isAddingSubject ? 'opacity-50 cursor-not-allowed' : 'text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 h-[42px] md:h-auto'}`}
-            >
-              Submit
-            </button>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-green-500 text-white font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-green-600 h-[42px] md:h-auto"
-            >
-              Import CSV
-            </button>
-          </div>
-        </div>
-      </form>
+    {/* Shift Select */}
+    <div className="w-full">
+      <select
+        id="shift"
+        {...register("shift", { required: "Please select a shift" })}
+        className="input-field w-full bg-white border rounded-full border-gray-300 text-gray-800 text-left indent-1
+      focus:ring-blue-500 focus:border-blue-500 block px-3  sm:text-base"
+      >
+        <option value="" disabled>Select shift</option>
+        <option value="Morning">Morning</option>
+        <option value="Evening">Evening</option>
+      </select>
+      {errors.shift && (
+        <p className="mt-1 text-sm text-red-600">{errors.shift.message}</p>
+      )}
+    </div>
+  </div>
+
+  {/* Buttons Row */}
+  <div className="flex flex-col md:flex-row gap-3 justify-end mt-6">
+    <button
+      type="submit" 
+      disabled={isAddingSubject}
+      className={`w-full md:w-auto px-5 py-2.5 rounded-lg font-medium text-sm transition-colors
+        ${isAddingSubject 
+          ? 'bg-blue-400 text-white cursor-not-allowed' 
+          : 'bg-blue-700 text-white hover:bg-blue-800 focus:ring-4 focus:ring-blue-300'}`}
+    >
+      Submit
+    </button>
+    
+    <button
+      type="button"
+      onClick={() => setIsModalOpen(true)}
+      className="w-full md:w-auto px-5 py-2.5 bg-green-500 text-white rounded-lg
+                 font-medium text-sm hover:bg-green-600 transition-colors"
+    >
+      Import CSV
+    </button>
+  </div>
+</form>
 
       {/* Modal Overlay */}
       {isModalOpen && (
