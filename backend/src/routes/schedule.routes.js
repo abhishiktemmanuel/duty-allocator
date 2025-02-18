@@ -5,6 +5,7 @@ import {
   editExamSchedule,
   deleteExamSchedule,
   addBulkExamSchedules,
+  deleteMultipleExamSchedules,
 } from "../controllers/schedule.controller.js";
 
 const router = Router();
@@ -12,7 +13,7 @@ const router = Router();
 router.route("/addexam").post(addExamDate);
 router.route("/getexams").get(getAllExamSchedules);
 router.route("/bulk").post(addBulkExamSchedules);
-// New routes for edit and delete
+router.route("/delete-multiple").post(deleteMultipleExamSchedules);
 router.route("/exam/:examId").put(editExamSchedule).delete(deleteExamSchedule);
 
 export default router;

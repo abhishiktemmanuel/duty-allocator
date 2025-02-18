@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { format } from 'date-fns';
-import { fetchExamSchedules, deleteSchedule, updateSchedule, fetchSubjects } from '../../services/backendApi';
+import { fetchExamSchedules, deleteSchedule, updateSchedule, fetchSubjects, deleteMultipleSchedules } from '../../services/backendApi';
 import { exportToCSV } from '../../services/csvExport';
 
 const ScheduleTable = () => {
@@ -10,6 +10,7 @@ const ScheduleTable = () => {
   const [error, setError] = useState('');
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [selectedSchedules, setSelectedSchedules] = useState([]);
 
   // Ref for managing cursor position in the rooms input
   const roomsInputRef = useRef(null);
@@ -48,6 +49,36 @@ const ScheduleTable = () => {
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const toggleAllSchedules = (e) => {
+    if (e.target.checked) {
+      setSelectedSchedules(schedules.map(s => s._id));
+    } else {
+      setSelectedSchedules([]);
+    }
+  };
+  
+  const toggleScheduleSelection = (scheduleId) => {
+    setSelectedSchedules(prev =>
+      prev.includes(scheduleId)
+        ? prev.filter(id => id !== scheduleId)
+        : [...prev, scheduleId]
+    );
+  };
+  
+  const handleMultipleDelete = async () => {
+    if (!selectedSchedules.length) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedSchedules.length} schedules?`)) return;
+  
+    try {
+      await deleteMultipleSchedules(selectedSchedules);
+      await loadSchedules();
+      setSelectedSchedules([]);
+    } catch (error) {
+      console.error('Multiple delete failed:', error);
+      setError(error.message);
+    }
+  };
 
   const handleInputChange = (e, field) => {
     const { value } = e.target;
@@ -173,13 +204,21 @@ const ScheduleTable = () => {
 
   return (
     <div className="w-full">
-      <div className="flex justify-end pb-2">
+      <div className="flex justify-end pb-2 gap-2">
         <button
           onClick={handleExportSchedule}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
         >
           Export to CSV
         </button>
+        {selectedSchedules.length > 0 && (
+          <button
+            onClick={handleMultipleDelete}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+          >
+            Delete Selected ({selectedSchedules.length})
+          </button>
+        )}
       </div>
 
       {/* Edit Modal */}
@@ -285,6 +324,14 @@ const ScheduleTable = () => {
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
+            <th scope="col" className="py-3 px-6">
+              <input
+                type="checkbox"
+                checked={selectedSchedules.length === schedules.length}
+                onChange={toggleAllSchedules}
+                className="dark-checkbox"
+              />
+            </th>
               <th scope="col" className="py-3 px-6">Subject</th>
               <th scope="col" className="py-3 px-6">Date</th>
               <th scope="col" className="py-3 px-6">Shift</th>
@@ -303,6 +350,14 @@ const ScheduleTable = () => {
                   {editingSchedule?._id === schedule._id ? (
                     // Edit mode
                     <>
+                    <td className="py-4 px-6">
+                        <input
+                          type="checkbox"
+                          checked={selectedSchedules.includes(schedule._id)}
+                          onChange={() => toggleScheduleSelection(schedule._id)}
+                          className="dark-checkbox"
+                        />
+                      </td>
                       <td className="py-4 px-6">
                         <select
                           value={editingSchedule.subject._id}
@@ -316,6 +371,7 @@ const ScheduleTable = () => {
                           ))}
                         </select>
                       </td>
+                      
                       <td className="py-4 px-6">
                         <input
                           type="date"
@@ -371,6 +427,14 @@ const ScheduleTable = () => {
                   ) : (
                     // View mode
                     <>
+                    <td className="py-4 px-6">
+                        <input
+                          type="checkbox"
+                          checked={selectedSchedules.includes(schedule._id)}
+                          onChange={() => toggleScheduleSelection(schedule._id)}
+                          className="dark-checkbox"
+                        />
+                      </td>
                       <td className="py-4 px-6">{schedule.subject.name}</td>
                       <td className="py-4 px-6">
                         {format(new Date(schedule.date), 'dd/MM/yyyy')}
@@ -439,6 +503,12 @@ const ScheduleTable = () => {
               className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 space-y-3"
             >
               <div className="flex justify-between items-center">
+              <input
+            type="checkbox"
+            checked={selectedSchedules.includes(schedule._id)}
+            onChange={() => toggleScheduleSelection(schedule._id)}
+            className="dark-checkbox"
+          />
                 <h3 className="font-medium text-gray-900 dark:text-white">
                   {schedule.subject.name}
                 </h3>

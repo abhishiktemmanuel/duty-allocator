@@ -182,6 +182,31 @@ const deleteExamSchedule = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Exam schedule deleted successfully"));
 });
 
+const deleteMultipleExamSchedules = asyncHandler(async (req, res) => {
+  const { examIds } = req.body;
+
+  if (!examIds || !Array.isArray(examIds)) {
+    throw new ApiError(400, "Invalid exam IDs provided");
+  }
+
+  const ExamSchedule = req.models.ExamSchedule;
+  const deleteResult = await ExamSchedule.deleteMany({ _id: { $in: examIds } });
+
+  if (deleteResult.deletedCount === 0) {
+    throw new ApiError(404, "No schedules found to delete");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        null,
+        `${deleteResult.deletedCount} schedules deleted successfully`
+      )
+    );
+});
+
 const addBulkExamSchedules = asyncHandler(async (req, res) => {
   const { schedules } = req.body;
 
@@ -254,4 +279,5 @@ export {
   editExamSchedule,
   deleteExamSchedule,
   addBulkExamSchedules,
+  deleteMultipleExamSchedules,
 };

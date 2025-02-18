@@ -186,6 +186,21 @@ export const deleteSchedule = async (examId) => {
   }
 };
 
+export const deleteMultipleSchedules = async (examIds) => {
+  try {
+    const response = await API.post("/schedule/delete-multiple", { examIds });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error deleting schedules:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to delete schedules"
+    );
+  }
+};
+
 export const updateSchedule = async (examId, payload) => {
   try {
     const response = await API.put(`/schedules/exam/${examId}`, payload);
