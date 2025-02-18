@@ -301,6 +301,47 @@ export const updateTeacher = async (teacherId, payload) => {
   }
 };
 
+// Bulk upload teachers
+export const addBulkTeachers = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await API.post("/teachers/bulk-teachers", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error in bulk upload:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to upload teachers"
+    );
+  }
+};
+
+// Delete multiple teachers
+export const deleteMultipleTeachers = async (teacherIds) => {
+  try {
+    const response = await API.delete("/teachers/delmultiteachers", {
+      data: { teacherIds },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error deleting teachers:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to delete teachers"
+    );
+  }
+};
+
 export const getDuties = async () => {
   try {
     const response = await API.get("/duty/getduties");

@@ -509,6 +509,61 @@ const DutyTable = () => {
       </div>
     );
   };
+  const renderMobileCard = (duty) => {
+    const isUnassigned = !duty.invidulator1 || !duty.invidulator2;
+    return (
+      <div 
+        key={duty._id}
+        className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-4 ${
+          isUnassigned ? 'bg-red-50 dark:bg-red-900/20' : ''
+        }`}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <div className="text-sm font-medium text-gray-900 dark:text-white">
+            {format(new Date(duty.date), 'dd/MM/yyyy')}
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs ${
+            duty.shift === 'Morning' 
+              ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100' 
+              : 'bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100'
+          }`}>
+            {duty.shift}
+          </span>
+        </div>
+  
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Subject:</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {duty.subject?.name || 'N/A'}
+            </span>
+          </div>
+  
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Room:</span>
+            <span className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-medium px-2.5 py-0.5 rounded">
+              {duty.room || 'N/A'}
+            </span>
+          </div>
+  
+          <div className="border-t dark:border-gray-700 pt-2 mt-2">
+            <div className="mb-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+                Invigilator 1:
+              </span>
+              {renderInvigilatorCell(duty, 'invidulator1', duty.invidulator1)}
+            </div>
+            <div>
+              <span className="text-sm text-gray-500 dark:text-gray-400 block mb-1">
+                Invigilator 2:
+              </span>
+              {renderInvigilatorCell(duty, 'invidulator2', duty.invidulator2)}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4">

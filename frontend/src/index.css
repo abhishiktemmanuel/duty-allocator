@@ -130,3 +130,53 @@ custom-select-control:hover {
 .input-field__placeholder {
   color: #a0aec0 !important;
 }
+
+/* Base checkbox styles */
+.dark-checkbox {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #6B7280;
+  border-radius: 0.375rem;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover state */
+.dark-checkbox:hover {
+  border-color: #6B7280;
+  background-color: rgba(75, 85, 99, 0.1);
+}
+
+/* Checked state */
+.dark-checkbox:checked {
+  background-color: #3B82F6;
+  border-color: #3B82F6;
+}
+
+/* Checkmark */
+.dark-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 0.25rem;
+  height: 0.5rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+}
+
+/* Focus state */
+.dark-checkbox:focus {
+  outline: 2px solid #60A5FA;
+  outline-offset: 2px;
+}
+
+/* Disabled state */
+.dark-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
