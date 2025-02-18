@@ -1,6 +1,7 @@
 import CreatableSelect from 'react-select/creatable';
 import PropTypes from 'prop-types';
 import { useState } from 'react';
+import { ClipLoader } from 'react-spinners';
 
 const MultiSelectWithAddOption = ({
   options = [],
@@ -10,50 +11,53 @@ const MultiSelectWithAddOption = ({
   value = []
 }) => {
   const [tempOptions, setTempOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleCreateOption = async (inputValue) => {
     if (!onOptionCreate) return;
+    setIsLoading(true);
 
-    // Create a temporary option
+    // Create temporary option
     const tempOption = {
       label: inputValue,
       value: `temp-${Date.now()}`,
-      __isNew__: true
+      __isNew__: true,
+      __isPending__: true
     };
 
-    // Optimistically update the selection
+    // Optimistically update selection
     const newSelection = [...value, tempOption];
     onSelectionChange(newSelection);
-
-    // Add the temporary option to the list
-    setTempOptions((prev) => [...prev, tempOption]);
+    setTempOptions(prev => [...prev, tempOption]);
 
     try {
-      // Create the real option on the server
+      // Create real option
       const createdOption = await onOptionCreate({ label: inputValue });
 
-      // Replace the temporary option with the real one
-      const updatedSelection = newSelection.map((opt) =>
+      // Replace temporary option
+      const updatedSelection = newSelection.map(opt =>
         opt.value === tempOption.value ? createdOption : opt
       );
       onSelectionChange(updatedSelection);
-
-      // Remove the temporary option from the list
-      setTempOptions((prev) => prev.filter((opt) => opt.value !== tempOption.value));
     } catch (error) {
       // Rollback on error
-      const rollbackSelection = newSelection.filter((opt) => opt.value !== tempOption.value);
-      onSelectionChange(rollbackSelection);
-      setTempOptions((prev) => prev.filter((opt) => opt.value !== tempOption.value));
-      console.error("Option creation failed:", error);
+      onSelectionChange(prev => 
+        prev.filter(opt => opt.value !== tempOption.value)
+      );
+      console.error("Creation failed:", error);
+    } finally {
+      setTempOptions(prev => 
+        prev.filter(opt => opt.value !== tempOption.value)
+      );
+      setIsLoading(false);
     }
   };
 
-  // Combine permanent and temporary options
+  // Combine options
   const combinedOptions = [...options, ...tempOptions];
 
   return (
-    <div className="">
+    <div className="relative">
       <CreatableSelect
         isMulti
         options={combinedOptions}
@@ -64,7 +68,31 @@ const MultiSelectWithAddOption = ({
         className="input-field text-left"
         classNamePrefix="input-field"
         isClearable
+        isDisabled={isLoading}
+        formatOptionLabel={(option) => (
+          <div className="flex items-center gap-2">
+            <span>{option.label}</span>
+            {option.__isPending__ && (
+              <span className="text-gray-500 text-sm">(saving...)</span>
+            )}
+          </div>
+        )}
+        styles={{
+          control: (base) => ({
+            ...base,
+            opacity: isLoading ? 0.7 : 1,
+          })
+        }}
       />
+
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+          <div className="flex items-center gap-2 text-gray-600">
+            <ClipLoader size={16} color="#4b5563" />
+            <span className="text-sm">Saving new item...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
