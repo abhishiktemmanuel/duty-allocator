@@ -38,7 +38,6 @@ const TeacherTable = () => {
       setLoading(false);
     } catch (err) {
       console.error("Error loading teachers:", err);
-      setError("Add teachers, no data found to display");
       setTeachers([]);
       setLoading(false);
     }
@@ -50,7 +49,6 @@ const TeacherTable = () => {
       setSubjects(subjectsData.map((sub) => ({ label: sub.name, value: sub._id })));
     } catch (error) {
       console.error("Error loading subjects:", error);
-      setError("Failed to load subjects");
     }
   };
 
@@ -60,7 +58,6 @@ const TeacherTable = () => {
       setSchools(schoolsData.map((school) => ({ label: school.name, value: school._id })));
     } catch (error) {
       console.error("Error loading schools:", error);
-      setError("Failed to load schools");
     }
   };
 

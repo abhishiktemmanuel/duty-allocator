@@ -22,7 +22,6 @@ const ScheduleTable = () => {
       setLoading(false);
     } catch (err) {
       console.error('Error loading schedules:', err);
-      setError('Add schedules, no data found to display');
       setSchedules([]);
       setLoading(false);
     }
@@ -34,7 +33,6 @@ const ScheduleTable = () => {
       setSubjects(subjectsData.map(sub => ({ label: sub.name, value: sub._id })));
     } catch (error) {
       console.error('Error loading subjects:', error);
-      setError('Failed to load subjects');
     }
   };
 

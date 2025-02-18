@@ -48,7 +48,7 @@ const TeacherForm = ({ onTeacherAdded }) => {
         setSubjects(subjectsData.map((sub) => ({ label: sub.name, value: sub._id })));
         setSchools(schoolsData.map((school) => ({ label: school.name, value: school._id })));
       } catch (error) {
-        console.error("Failed to load data:", error);
+        console.error(error);
         setErrorMessage("Please add data, no subject or school data found. ");
         setTimeout(() => setErrorMessage(""), 3000);
       } finally {
