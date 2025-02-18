@@ -135,11 +135,12 @@ export const razorpayWebhookHandler = async (req, res) => {
     const digest = shasum.digest("hex");
 
     if (digest !== req.headers["x-razorpay-signature"]) {
+      console.error("Webhook signature verification failed");
       return res.status(403).json({ message: "Invalid signature" });
     }
-    console.log("Webhook received:", req.body);
 
     const event = req.body.event;
+    const payload = req.body.payload;
     const subscriptionId = req.body.payload.subscription.entity.id;
 
     switch (event) {
@@ -148,25 +149,29 @@ export const razorpayWebhookHandler = async (req, res) => {
           { razorpaySubscriptionId: subscriptionId },
           {
             status: "active",
-            startDate: new Date(),
-            endDate: calculateEndDate(
-              req.body.payload.subscription.entity.plan.period
-            ),
           }
         );
         break;
 
       case "subscription.charged":
+        const subscriptionEntity = payload.subscription.entity;
+        const startDate = new Date(subscriptionEntity.start_at * 1000);
+        const endDate = new Date(subscriptionEntity.end_at * 1000);
         await Subscription.findOneAndUpdate(
           { razorpaySubscriptionId: subscriptionId },
-          { status: "active" }
+          {
+            status: "active",
+            startDate,
+            endDate,
+          },
+          { new: true, upsert: false }
         );
         break;
 
       case "subscription.cancelled":
         await Subscription.findOneAndUpdate(
           { razorpaySubscriptionId: subscriptionId },
-          { status: "cancelled" }
+          { status: "cancelled", cancelledAt: new Date() }
         );
         break;
 
