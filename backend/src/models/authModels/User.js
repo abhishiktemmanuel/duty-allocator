@@ -4,7 +4,12 @@ const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, unique: true, sparse: true },
-    password: { type: String, required: true },
+    password: {
+      type: String,
+      required: function () {
+        return this.externalAccounts && this.externalAccounts.length === 0;
+      },
+    },
     role: {
       type: String,
       enum: ["superAdmin", "admin", "endUser"],

@@ -130,6 +130,15 @@ const Login = () => {
           >
             {loading ? "Logging in..." : "Login"}
           </button>
+          <a 
+            href="/auth/google"
+            className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center justify-center gap-2"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              {/* Google icon SVG */}
+            </svg>
+            Continue with Google
+          </a>
         </form>
 
         <div className="mt-4">

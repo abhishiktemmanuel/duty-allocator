@@ -4,9 +4,36 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../models/authModels/User.js";
 import Organization from "../models/authModels/organization.model.js";
+import passport from "passport";
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+
+// Google OAuth Initiation
+router.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+// Google OAuth Callback
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  (req, res) => {
+    const token = jwt.sign(
+      {
+        id: req.user._id,
+        role: req.user.role,
+        organizationId: req.user.organizationId,
+      },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Redirect to frontend with token
+    res.redirect(`${process.env.FRONTEND_URL}/oauth-callback?token=${token}`);
+  }
+);
 
 router.post("/refresh-token", async (req, res) => {
   // Implement token refresh logic here

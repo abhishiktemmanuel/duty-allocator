@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import { connectDB } from "./db/index.js";
 import dbSwitcher from "./middlewares/dbSwitcher.js";
 import bodyParser from "body-parser";
+import passport from "passport";
+import "./config/passport.js";
 
 const app = express();
 
@@ -12,6 +14,7 @@ app.use(cors({ origin: process.env.CORS_ORIGIN }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.json());
+app.use(passport.initialize());
 
 // Connect to the master database
 connectDB()
