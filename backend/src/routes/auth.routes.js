@@ -22,9 +22,13 @@ router.get(
   (req, res) => {
     const token = jwt.sign(
       {
-        id: req.user._id,
-        role: req.user.role,
-        organizationId: req.user.organizationId,
+        id: user._id,
+        role: user.role,
+        organizations: user.organizations.map((org) => ({
+          organizationId: org.organizationId,
+          teacherId: org.teacherId,
+          status: org.status,
+        })),
       },
       JWT_SECRET,
       { expiresIn: "1h" }
@@ -74,13 +78,24 @@ router.post("/refresh-token", async (req, res) => {
 router.post("/register/admin", async (req, res) => {
   const { name, email, password } = req.body;
 
+  // Input validation
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
   try {
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already in use." });
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new organization for the admin
     const newOrganization = new Organization({
-      name: `${name}'s Organization`, // Example organization name
+      name: `${name}'s Organization`,
       adminId: null, // This will be updated after saving the admin
     });
 
@@ -92,7 +107,13 @@ router.post("/register/admin", async (req, res) => {
       email,
       password: hashedPassword,
       role: "admin",
-      organizationId: savedOrganization._id,
+      organizations: [
+        {
+          organizationId: savedOrganization._id,
+          status: "Active",
+          joinedAt: new Date(),
+        },
+      ],
     });
 
     const savedAdmin = await newAdmin.save();
@@ -101,13 +122,36 @@ router.post("/register/admin", async (req, res) => {
     savedOrganization.adminId = savedAdmin._id;
     await savedOrganization.save();
 
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        id: savedAdmin._id,
+        role: savedAdmin.role,
+        organizations: [
+          {
+            organizationId: savedOrganization._id,
+            status: "Active",
+          },
+        ],
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
     return res.status(201).json({
       message: "Admin registered successfully",
+      token,
       organizationId: savedOrganization._id,
     });
   } catch (error) {
     console.error("Error registering Admin:", error);
-    res.status(500).json({ message: "Error registering Admin", error });
+    if (error.code === 11000) {
+      // MongoDB duplicate key error
+      return res.status(400).json({ message: "Email already in use." });
+    }
+    res
+      .status(500)
+      .json({ message: "Error registering Admin", error: error.message });
   }
 });
 
@@ -132,7 +176,11 @@ router.post("/login", async (req, res) => {
       {
         id: user._id,
         role: user.role,
-        organizationId: user.role === "admin" ? user._id : user.organizationId,
+        organizations: user.organizations.map((org) => ({
+          organizationId: org.organizationId,
+          teacherId: org.teacherId,
+          status: org.status,
+        })),
       },
       JWT_SECRET,
       { expiresIn: "1h" }
@@ -251,5 +299,53 @@ router.post("/reset-password", async (req, res) => {
     }
     console.error("Error resetting password:", error);
     res.status(500).json({ message: "Error resetting password", error });
+  }
+});
+
+router.post("/merge-account", async (req, res) => {
+  try {
+    const { token } = req.body;
+    const { teacherId, organizationId } = jwt.verify(token, JWT_SECRET);
+
+    const user = await User.findById(req.user.id);
+    const existingConnection = user.organizations.find(
+      (org) =>
+        org.organizationId.equals(organizationId) &&
+        org.teacherId.equals(teacherId)
+    );
+
+    if (existingConnection) {
+      return res.status(400).json({ message: "Account already merged" });
+    }
+
+    user.organizations.push({
+      organizationId,
+      teacherId,
+      status: "Active",
+      joinedAt: new Date(),
+    });
+
+    await user.save();
+    res.status(200).json({ message: "Account merged successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error merging account", error });
+  }
+});
+
+router.post("/request-merge", async (req, res) => {
+  try {
+    const { teacherId } = req.body;
+    const mergeToken = jwt.sign(
+      { teacherId, organizationId: req.orgContext.orgId },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Send merge token to teacher via email/sms
+    // Implement notification logic
+
+    res.status(200).json({ message: "Merge request sent", mergeToken });
+  } catch (error) {
+    res.status(500).json({ message: "Error sending merge request", error });
   }
 });

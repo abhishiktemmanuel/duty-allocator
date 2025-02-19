@@ -21,8 +21,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = {
       id: user._id,
       role: user.role,
-      organizationId: decoded.organizationId,
-      organizations: user.organizations,
+      organizations: decoded.organizations,
     };
 
     // Check subscription status if the user is an admin
@@ -31,6 +30,10 @@ const authMiddleware = async (req, res, next) => {
         userId: req.user.id,
         status: "active",
       });
+      req.orgContext = {
+        orgId: user.organizations[0]?.organizationId,
+        dbName: `org_${user.organizations[0]?.organizationId}`,
+      };
 
       const allowedPaths = [
         "/api/v1/subscriptions/create",
@@ -44,6 +47,22 @@ const authMiddleware = async (req, res, next) => {
       //     message: "Access denied. No active subscription found.",
       //   });
       // }
+    }
+    if (user.role === "endUser" && req.headers["x-org-id"]) {
+      const orgConnection = user.organizations.find(
+        (org) => org.organizationId.toString() === req.headers["x-org-id"]
+      );
+
+      if (!orgConnection) {
+        return res
+          .status(403)
+          .json({ message: "No access to this organization" });
+      }
+
+      req.orgContext = {
+        orgId: orgConnection.organizationId,
+        teacherId: orgConnection.teacherId,
+      };
     }
 
     next();

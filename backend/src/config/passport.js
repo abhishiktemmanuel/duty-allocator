@@ -12,13 +12,27 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails[0].value;
-
-        // Check existing user
         const existingUser = await User.findOne({
           $or: [{ "externalAccounts.externalId": profile.id }, { email }],
         });
 
         if (existingUser) {
+          // Merge logic
+          const mergeToken = localStorage.getItem("mergeToken");
+          if (mergeToken) {
+            const { organizationId, teacherId } = jwt.verify(
+              mergeToken,
+              JWT_SECRET
+            );
+            existingUser.organizations.push({
+              organizationId,
+              teacherId,
+              status: "Active",
+              joinedAt: new Date(),
+            });
+            await existingUser.save();
+          }
+
           // Add Google account if not already linked
           if (
             !existingUser.externalAccounts.some(
@@ -38,7 +52,8 @@ passport.use(
         const newUser = new User({
           name: profile.displayName,
           email,
-          role: "endUser", // Default role for OAuth users
+          role: "endUser",
+          verified: profile.emails[0].verified,
           externalAccounts: [
             {
               provider: "Google",
@@ -48,9 +63,9 @@ passport.use(
         });
 
         await newUser.save();
-        done(null, newUser);
+        return done(null, newUser);
       } catch (error) {
-        done(error, null);
+        return done(error, null);
       }
     }
   )

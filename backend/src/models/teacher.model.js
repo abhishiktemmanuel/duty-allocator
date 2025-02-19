@@ -2,6 +2,7 @@
 import mongoose from "mongoose";
 import { User } from "./authModels/User.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const TeacherSchema = new mongoose.Schema(
   {
@@ -33,6 +34,11 @@ const TeacherSchema = new mongoose.Schema(
       ref: "Organization",
       required: true,
     },
+    globalUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   { timestamps: true }
 );
@@ -40,39 +46,39 @@ const TeacherSchema = new mongoose.Schema(
 // Post-save middleware to create or update end user
 TeacherSchema.post("save", async function (doc) {
   try {
-    const email = `${doc.name.toLowerCase().replace(/\s+/g, ".")}@school.com`;
-    const hashedPassword = await bcrypt.hash(doc.name, 10);
-
-    const existingUser = await User.findOne({ email: email });
-
-    if (existingUser) {
-      // Update existing user
-      existingUser.organizations.push({
-        organizationId: doc.organization,
+    // Create merge token
+    const mergeToken = jwt.sign(
+      {
         teacherId: doc._id,
-        status: "Active",
-      });
-      await existingUser.save();
-    } else {
-      // Create new user
-      const newUser = new User({
-        name: doc.name,
-        email: email,
-        password: hashedPassword,
-        role: "endUser",
-        passwordChangeRequired: true,
-        organizations: [
-          {
+        organizationId: doc.organization,
+        globalUserId: doc.globalUserId,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "70d" }
+    );
+    // Create/update global user stub
+    await User.findByIdAndUpdate(
+      doc.globalUserId,
+      {
+        $push: {
+          organizations: {
             organizationId: doc.organization,
             teacherId: doc._id,
-            status: "Active",
+            status: "Pending",
+            joinedAt: new Date(),
           },
-        ],
-      });
-      await newUser.save();
-    }
+          mergeRequests: {
+            token: mergeToken,
+            organizationId: doc.organization,
+            teacherId: doc._id,
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+        },
+      },
+      { upsert: true, new: true }
+    );
   } catch (error) {
-    console.error("Error creating/updating end user for teacher:", error);
+    console.error("Error handling teacher creation:", error);
   }
 });
 

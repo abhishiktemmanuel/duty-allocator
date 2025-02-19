@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import multer from "multer";
 import {
   registerTeacher,
@@ -7,6 +8,7 @@ import {
   updateTeacher,
   addBulkTeachers,
   deleteMultipleTeachers,
+  mergeTeacherAccount,
 } from "../controllers/teacher.controller.js";
 
 const router = Router();
@@ -15,6 +17,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Teacher registration and retrieval
 router.route("/newteacher").post(registerTeacher);
 router.route("/getteachers").get(getAllTeachers);
+router.post("/merge", asyncHandler(mergeTeacherAccount));
 
 // Bulk upload and multiple delete
 router.post("/bulk-teachers", upload.single("file"), addBulkTeachers);

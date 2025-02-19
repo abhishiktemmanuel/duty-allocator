@@ -98,7 +98,6 @@ const updateTicketStatus = asyncHandler(async (req, res) => {
 
 // Add comment to ticket
 const addComment = asyncHandler(async (req, res) => {
-  console.log("Adding comment to ticket");
   const Ticket = req.models.Ticket;
   const { ticketId } = req.params;
   const { comment } = req.body;
