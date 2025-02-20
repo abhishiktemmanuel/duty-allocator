@@ -4,6 +4,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/authModels/User.js";
 import csvParser from "csv-parser";
 import { Readable } from "stream";
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 const parseCSV = (buffer) => {
   return new Promise((resolve, reject) => {
@@ -22,6 +24,7 @@ const parseCSV = (buffer) => {
 const addBulkTeachers = asyncHandler(async (req, res) => {
   const orgId = req.headers["x-org-id"];
   const file = req.file;
+  let globalUsers;
 
   if (!file) {
     throw new ApiError(400, "CSV file is required");
@@ -103,7 +106,7 @@ const addBulkTeachers = asyncHandler(async (req, res) => {
 
     if (results.length > 0) {
       // Create global users in batch
-      const globalUsers = await User.insertMany(
+      globalUsers = await User.insertMany(
         results.map((teacher) => ({
           name: teacher.name,
           role: "endUser",
