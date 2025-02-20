@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser, requestPasswordReset } from "../../services/backendApi";
 import { useAuth } from '../../context/AuthContext';
-import { FiLock, FiMail, FiAlertCircle, FiLoader, FiUser } from "react-icons/fi";
-
+import { FiLock, FiMail, FiAlertCircle, FiLoader, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
 
 const Login = () => {
   const { login } = useAuth();
@@ -13,6 +12,7 @@ const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -50,25 +50,27 @@ const Login = () => {
       setLoading(false);
     }
   };
-  
+
   const handleRegisterRedirect = () => {
     navigate("/register");
   };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl backdrop-blur-sm border border-white/30 dark:border-gray-700/30">
         <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">
           Welcome Back
         </h2>
-  
+
         {errorMessage && (
           <div className="mb-6 p-4 text-red-800 bg-red-50 border border-red-200 rounded-xl flex items-center dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-400">
             <FiAlertCircle className="mr-2" />
             {errorMessage}
           </div>
         )}
-  
+
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Username Field */}
           <div className="relative">
             <FiUser className="absolute top-3.5 left-4 text-gray-400 dark:text-gray-500" />
             <input
@@ -82,21 +84,30 @@ const Login = () => {
               className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30"
             />
           </div>
-  
+
+          {/* Password Field with Visibility Toggle */}
           <div className="relative">
             <FiLock className="absolute top-3.5 left-4 text-gray-400 dark:text-gray-500" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               id="password"
               name="password"
               value={credentials.password}
               onChange={handleChange}
               required
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30"
+              className="w-full pl-11 pr-11 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute top-3.5 right-4 text-gray-400 dark:text-gray-500 hover:text-blue-600"
+            >
+              {showPassword ? <FiEye /> : <FiEyeOff />}
+            </button>
           </div>
-  
+
+          {/* Forgot Password Link */}
           <button
             type="button"
             onClick={() => setShowForgotPassword(true)}
@@ -104,7 +115,8 @@ const Login = () => {
           >
             Forgot Password?
           </button>
-  
+
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -119,7 +131,8 @@ const Login = () => {
               "Sign In"
             )}
           </button>
-  
+
+          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
@@ -130,7 +143,8 @@ const Login = () => {
               </span>
             </div>
           </div>
-  
+
+          {/* Google Login Button */}
           <a 
             href="/auth/google"
             className="w-full py-3 px-6 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
@@ -141,7 +155,8 @@ const Login = () => {
             Google
           </a>
         </form>
-  
+
+        {/* Register Link */}
         <p className="mt-8 text-center text-gray-600 dark:text-gray-400">
           Don&apos;t have an account?{' '}
           <button
@@ -151,7 +166,7 @@ const Login = () => {
             Register here
           </button>
         </p>
-  
+
         {/* Forgot Password Modal */}
         {showForgotPassword && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -194,156 +209,6 @@ const Login = () => {
       </div>
     </div>
   );
-
 };
 
-
-
 export default Login;
-
-
-
-
-
-
-
-// return (
-//   <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-//     <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md">
-//       <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-white mb-6">
-//         Login
-//       </h2>
-
-//       {errorMessage && (
-//         <div className="mb-4 p-4 text-red-700 bg-red-100 border border-red-300 rounded-lg">
-//           {errorMessage}
-//         </div>
-//       )}
-
-//       {resetMessage && (
-//         <div className="mb-4 p-4 text-green-700 bg-green-100 border border-green-300 rounded-lg">
-//           {resetMessage}
-//         </div>
-//       )}
-
-//       <form onSubmit={handleSubmit} className="space-y-6">
-//         <div>
-//           <label
-//             htmlFor="username"
-//             className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
-//           >
-//             Username
-//           </label>
-//           <input
-//             type="text"
-//             id="username"
-//             name="username"
-//             placeholder="Enter your username"
-//             value={credentials.username}
-//             onChange={handleChange}
-//             required
-//             className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full px-4 py-2 text-sm text-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
-//           />
-//         </div>
-
-//         <div>
-//           <label
-//             htmlFor="password"
-//             className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
-//           >
-//             Password
-//           </label>
-//           <input
-//             type="password"
-//             id="password"
-//             name="password"
-//             placeholder="Enter your password"
-//             value={credentials.password}
-//             onChange={handleChange}
-//             required
-//             className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full px-4 py-2 text-sm text-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
-//           />
-//         </div>
-
-//         <div className="flex items-center justify-end">
-//           <button
-//             type="button"
-//             onClick={() => setShowForgotPassword(true)}
-//             className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400"
-//           >
-//             Forgot Password?
-//           </button>
-//         </div>
-
-//         <button
-//           type="submit"
-//           disabled={loading}
-//           className={`w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:outline-none focus:ring focus:ring-blue-300 ${
-//             loading ? "opacity-50 cursor-not-allowed" : ""
-//           }`}
-//         >
-//           {loading ? "Logging in..." : "Login"}
-//         </button>
-//         <a 
-//           href="/auth/google"
-//           className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center justify-center gap-2"
-//         >
-//           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-//             {/* Google icon SVG */}
-//           </svg>
-//           Continue with Google
-//         </a>
-//       </form>
-
-//       <div className="mt-4">
-//         <button
-//           onClick={handleRegisterRedirect}
-//           className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg focus:outline-none focus:ring focus:ring-green-300"
-//         >
-//           Register
-//         </button>
-//       </div>
-
-//       {/* Forgot Password Modal */}
-//       {showForgotPassword && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-//           <div className="bg-white dark:bg-gray-800 p-8 rounded-xl max-w-md w-full">
-//             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
-//               Reset Password
-//             </h3>
-//             <form onSubmit={handleForgotPassword}>
-//               <div className="mb-4">
-//                 <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-//                   Email
-//                 </label>
-//                 <input
-//                   type="email"
-//                   value={email}
-//                   onChange={(e) => setEmail(e.target.value)}
-//                   className="w-full p-2 border rounded bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white"
-//                   required
-//                 />
-//               </div>
-//               <div className="flex justify-end space-x-2">
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowForgotPassword(false)}
-//                   className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-300"
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   type="submit"
-//                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-//                   disabled={loading}
-//                 >
-//                   {loading ? "Sending..." : "Reset Password"}
-//                 </button>
-//               </div>
-//             </form>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   </div>
-// );
