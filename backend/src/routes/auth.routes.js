@@ -76,10 +76,10 @@ router.post("/refresh-token", async (req, res) => {
 // Admin Registration
 
 router.post("/register/admin", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { orgName, name, email, password } = req.body;
 
   // Input validation
-  if (!name || !email || !password) {
+  if (!orgName || !name || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
   }
 
@@ -95,7 +95,7 @@ router.post("/register/admin", async (req, res) => {
 
     // Create a new organization for the admin
     const newOrganization = new Organization({
-      name: `${name}'s Organization`,
+      name: orgName,
       adminId: null, // This will be updated after saving the admin
     });
 

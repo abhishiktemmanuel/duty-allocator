@@ -104,9 +104,9 @@ const addBulkTeachers = asyncHandler(async (req, res) => {
     if (results.length > 0) {
       // Create global users in batch
       const globalUsers = await User.insertMany(
-        results.map(() => ({
+        results.map((teacher) => ({
+          name: teacher.name,
           role: "endUser",
-          verified: false,
           organizations: [],
         }))
       );
@@ -222,9 +222,7 @@ const registerTeacher = asyncHandler(async (req, res) => {
 
   const globalUser = await User.create({
     name: name,
-    email: `${name.toLowerCase().replace(/\s+/g, ".")}@school.com`,
     role: "endUser",
-    verified: false,
     organizations: [],
   });
 
@@ -306,7 +304,6 @@ const deleteTeacher = asyncHandler(async (req, res) => {
     );
 });
 
-// Update a teacher
 const updateTeacher = asyncHandler(async (req, res) => {
   const { teacherId } = req.params;
   const { name, subjects, school, duties } = req.body;
@@ -316,13 +313,34 @@ const updateTeacher = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Teacher ID is required");
   }
 
-  if (!name && !subjects && !school && !duties) {
-    throw new ApiError(400, "At least one field is required for update");
-  }
-
   const existingTeacher = await Teacher.findById(teacherId);
   if (!existingTeacher) {
     throw new ApiError(404, "Teacher not found");
+  }
+
+  // Extract the ObjectId from the school object
+  const schoolId =
+    school && school.value ? school.value : existingTeacher.school;
+
+  // Parse subjects if it's a string
+  let subjectIds = existingTeacher.subjects;
+
+  if (subjects) {
+    if (typeof subjects === "string") {
+      try {
+        const parsedSubjects = JSON.parse(subjects);
+        subjectIds = parsedSubjects.map((subject) => subject.value);
+      } catch (error) {
+        throw new ApiError(400, "Invalid subjects format");
+      }
+    } else if (Array.isArray(subjects)) {
+      subjectIds = subjects.map((subject) => subject.value);
+    }
+  }
+
+  // Ensure subjectIds is never empty
+  if (subjectIds.length === 0) {
+    throw new ApiError(400, "At least one subject is required");
   }
 
   const updatedTeacher = await Teacher.findByIdAndUpdate(
@@ -330,25 +348,23 @@ const updateTeacher = asyncHandler(async (req, res) => {
     {
       $set: {
         name: name || existingTeacher.name,
-        subjects: subjects || existingTeacher.subjects,
-        school: school || existingTeacher.school,
+        subjects: subjectIds,
+        school: schoolId,
         duties: duties || existingTeacher.duties,
       },
     },
-    { new: true }
+    { new: true, runValidators: true }
   )
     .populate({ path: "subjects", select: "name" })
     .populate({ path: "school", select: "name" });
 
   // Update associated user if name is changed
   if (name && name !== existingTeacher.name) {
-    const newEmail = `${name.toLowerCase().replace(/\s+/g, ".")}@school.com`;
     await User.findOneAndUpdate(
-      { teacherId },
+      { _id: existingTeacher.globalUserId },
       {
         $set: {
           name: name,
-          email: newEmail,
         },
       }
     );

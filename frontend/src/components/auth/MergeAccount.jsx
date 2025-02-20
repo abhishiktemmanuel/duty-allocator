@@ -13,7 +13,7 @@ export const MergeAccount = () => {
       await mergeAccount(token);
       navigate('/dashboard');
     } catch (error) {
-      // Handle error
+      console.error('Failed to merge account:', error);
     }
   };
 

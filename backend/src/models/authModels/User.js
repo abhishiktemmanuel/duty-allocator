@@ -5,15 +5,15 @@ const UserSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: {
       type: String,
+      unique: true,
       sparse: true,
       validate: {
         validator: function (v) {
-          return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+          return this.role !== "endUser"
+            ? true
+            : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
         },
         message: (props) => `${props.value} is not a valid email address!`,
-      },
-      required: function () {
-        return this.role !== "endUser"; // Required for roles other than endUser
       },
     },
     password: {

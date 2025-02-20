@@ -48,6 +48,24 @@ const Register = () => {
           {/* Name Field */}
           <div>
             <label
+              htmlFor="orgName"
+              className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Institute Name
+            </label>
+            <input
+              type="text"
+              id="orgName"
+              name="orgName"
+              placeholder="Enter Institute Name"
+              value={formData.orgName}
+              onChange={handleChange}
+              required
+              className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg w-full px-4 py-2 text-sm text-gray-800 dark:text-white focus:ring-blue-500 focus:border-blue-500"
+            />
+            </div>
+          <div>
+            <label
               htmlFor="name"
               className="block text-sm text-left pl-1 font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
