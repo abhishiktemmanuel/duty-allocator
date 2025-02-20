@@ -8,6 +8,10 @@ const organizationSchema = new Schema(
       type: String,
       required: true,
     },
+    affiliation: {
+      type: String,
+      required: true,
+    },
     adminId: {
       type: Schema.Types.ObjectId,
       ref: "User",
