@@ -170,11 +170,6 @@ const ScheduleForm = ({ onScheduleAdded }) => {
   };
 
   // Handle CSV file upload and bulk import
-  const parseDate = (dateString) => {
-    const [day, month, year] = dateString.split("/");
-    return new Date(`${year}-${month}-${day}`);
-  };
-  
   const handleCSVImport = async () => {
     if (!csvFile) {
       setErrorMessage("Please select a CSV file first.");
@@ -182,115 +177,45 @@ const ScheduleForm = ({ onScheduleAdded }) => {
       return;
     }
   
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+  
     Papa.parse(csvFile, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        console.log("Raw Parsed CSV Data:", results); // Debugging: Log raw parsed data
-        const rows = results.data;
-        const errors = [];
-        const schedules = [];
-  
-        for (let index = 0; index < rows.length; index++) {
-          const row = rows[index];
-          console.log(`Processing Row ${index + 1}:`, row); // Debugging: Log each row
-  
-          // Explicitly map headers to lowercase keys
-          const subjectName = row.Subject || row.subject; // Handle both cases
-          const date = row.Date || row.date;
-          const shift = row.Shift || row.shift;
-          const roomsString = row.Rooms || row.rooms;
-          const standard = row.Standard || row.standard;
-  
-          // Validate subject
-          if (!subjectName) {
-            errors.push(`Row ${index + 1}: Subject is missing`);
-            continue;
-          }
-  
-          // Check if the subject exists
-          let subject = subjects.find((sub) => sub.label === subjectName);
-  
-          // If the subject doesn't exist, create it
-          if (!subject) {
-            try {
-              const newSubject = await addSubject(subjectName);
-              if (!newSubject || !newSubject.name || !newSubject._id) {
-                errors.push(`Row ${index + 1}: Failed to create subject '${subjectName}'`);
-                continue;
-              }
-  
-              // Add the new subject to the state
-              const newOption = { label: newSubject.name, value: newSubject._id };
-              setSubjects((prevSubjects) => [...prevSubjects, newOption]);
-              subject = newOption;
-            } catch (error) {
-              console.error("Failed to add subject:", error);
-              errors.push(`Row ${index + 1}: Failed to create subject '${subjectName}'`);
-              continue;
-            }
-          }
-  
-          // Validate date
-          const dateObj = parseDate(date); // Use the custom date parser
-          if (isNaN(dateObj)) {
-            errors.push(`Row ${index + 1}: Invalid date format`);
-            continue;
-          }
-  
-          // Validate shift
-          if (!["Morning", "Evening"].includes(shift)) {
-            errors.push(`Row ${index + 1}: Invalid shift value`);
-            continue;
-          }
-  
-          // Validate rooms
-          const roomsArray = roomsString.split(",").map((room) => room.trim());
-          if (roomsArray.length === 0) {
-            errors.push(`Row ${index + 1}: At least one room required`);
-            continue;
-          }
-  
-          // Validate standard
-          if (!standard) {
-            errors.push(`Row ${index + 1}: Standard is required`);
-            continue;
-          }
-  
-          schedules.push({
-            subject: subject.value,
-            date: dateObj.toISOString().split("T")[0], // Format as YYYY-MM-DD
-            shift,
-            rooms: roomsArray,
-            standard,
-          });
-        }
-  
-        if (errors.length > 0) {
-          setErrorMessage(`CSV Errors: ${errors.join("; ")}`);
-          setTimeout(() => setErrorMessage(""), 5000);
-          return;
-        }
-  
         try {
-          await submitBulkSchedules(schedules);
-          setSuccessMessage(`Imported ${schedules.length} schedules successfully!`);
-          setTimeout(() => setSuccessMessage(""), 5000);
+          const response = await submitBulkSchedules(results.data);
+          
+          if (response.errorCount > 0) {
+            setErrorMessage(
+              `Imported ${response.successCount} schedules. ${response.errorCount} errors found. ` +
+              `First error: ${response.sampleError?.error} (Row ${response.sampleError?.row})`
+            );
+          } else {
+            setSuccessMessage(`Successfully imported ${response.successCount} schedules`);
+          }
+  
+          if (response.errors?.length > 0) {
+            console.error("Detailed errors:", response.errors);
+            // Optionally show modal with full error list
+          }
+  
           if (onScheduleAdded) onScheduleAdded();
         } catch (error) {
-          console.error("Bulk upload failed:", error);
           setErrorMessage("Failed to import CSV. Please check the file format.");
-          setTimeout(() => setErrorMessage(""), 5000);
+        } finally {
+          setLoading(false);
         }
       },
       error: (error) => {
-        console.error("CSV parsing error:", error);
-        setErrorMessage("Error parsing CSV file");
-        setTimeout(() => setErrorMessage(""), 3000);
-      },
+        setLoading(false);
+        setErrorMessage("Error parsing CSV file: " + error.message);
+      }
     });
   };
-
+    
   // Handle file drop
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -446,52 +371,165 @@ const ScheduleForm = ({ onScheduleAdded }) => {
 
       {/* Modal Overlay */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Upload CSV File</h3>
-            <p className="mt-2 text-sm text-gray-500">
-          CSV format: subject,date,shift,rooms,standard (rooms comma-separated)
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-xl relative">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+          Import Exam Schedules
+        </h3>
+        <button
+          onClick={() => {
+            setIsModalOpen(false);
+            setCsvFile(null);
+          }}
+          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Instructions */}
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-gray-700 rounded-lg">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          <strong>CSV Format Requirements:</strong>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
+            <li>Columns: subject, date, shift, rooms, standard</li>
+            <li>Date formats: YYYY-MM-DD, DD/MM/YYYY, MM-DD-YYYY</li>
+            <li>Shift values: Morning or Evening (any case)</li>
+            <li>Rooms: comma-separated values</li>
+            <li>First row should be headers</li>
+          </ul>
         </p>
-            <div
-              className="border-2 border-dashed border-gray-300 p-6 text-center cursor-pointer"
-              onDrop={handleFileDrop}
-              onDragOver={(e) => e.preventDefault()}
-            >
-              <p>Drag and drop a CSV file here, or</p>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileInputChange}
-                className="hidden"
-                id="csvFileInput"
-              />
-              <label
-                htmlFor="csvFileInput"
-                className="text-blue-500 cursor-pointer"
-              >
-                click to select a file
-              </label>
-            </div>
-            {csvFile && (
-              <div className="mt-4">
-                <p className="text-sm">Selected file: {csvFile.name}</p>
-                <button
-                  onClick={handleCSVImport}
-                  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mt-4"
-                >
-                  Import CSV
-                </button>
-              </div>
+      </div>
+
+      {/* Drag & Drop Area */}
+      <div
+        className={`border-2 border-dashed ${
+          csvFile ? "border-green-500" : "border-gray-300 dark:border-gray-600"
+        } rounded-lg p-8 text-center transition-all duration-200`}
+        onDrop={handleFileDrop}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.currentTarget.classList.add("border-blue-500");
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.currentTarget.classList.remove("border-blue-500");
+        }}
+      >
+        <div className="flex flex-col items-center justify-center space-y-3">
+          <svg
+            className={`w-12 h-12 ${
+              csvFile ? "text-green-500" : "text-gray-400"
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+            />
+          </svg>
+          
+          <div className="space-y-1">
+            {csvFile ? (
+              <>
+                <p className="font-medium text-gray-700 dark:text-gray-200">
+                  {csvFile.name}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {(csvFile.size / 1024).toFixed(1)} KB
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-700 dark:text-gray-200">
+                  Drag and drop CSV file here
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  or browse files
+                </p>
+              </>
             )}
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-4 text-gray-500 hover:text-gray-700"
-            >
-              Close
-            </button>
           </div>
         </div>
+        
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileInputChange}
+          className="hidden"
+          id="csvFileInput"
+        />
+        <label
+          htmlFor="csvFileInput"
+          className="mt-4 inline-block px-4 py-2 bg-blue-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+        >
+          Choose File
+        </label>
+      </div>
+
+      {/* Processing Feedback */}
+      {loading && (
+        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center space-x-3">
+          <div className="animate-spin h-5 w-5 text-blue-500" />
+          <span className="text-gray-600 dark:text-gray-300">
+            Processing {csvFile?.name}...
+          </span>
+        </div>
       )}
+
+      {/* Error/Success Messages */}
+      {errorMessage && (
+        <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-red-600 dark:text-red-400 font-medium">
+              Import Issues Found
+            </span>
+            <button 
+              onClick={() => setErrorMessage("")}
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-sm text-red-500 dark:text-red-400">
+            {errorMessage}
+          </p>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="mt-6 flex justify-end space-x-3">
+        <button
+          onClick={() => {
+            setIsModalOpen(false);
+            setCsvFile(null);
+          }}
+          className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+        >
+          Cancel
+        </button>
+        
+        <button
+          onClick={handleCSVImport}
+          disabled={!csvFile || loading}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            !csvFile || loading
+              ? "bg-gray-300 dark:bg-gray-600 cursor-not-allowed"
+              : "bg-green-500 hover:bg-green-600 text-white"
+          }`}
+        >
+          {loading ? "Importing..." : "Start Import"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

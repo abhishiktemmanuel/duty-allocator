@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
+import moment from "moment";
 
 // Helper function to fetch all exam schedules
 const fetchAllExamSchedules = async (models) => {
@@ -219,76 +220,182 @@ const addBulkExamSchedules = asyncHandler(async (req, res) => {
   const results = [];
   const errors = [];
 
-  console.log("Starting bulk upload of schedules...");
+  const parseDate = (dateString) => {
+    // Try multiple date formats
+    const formats = [
+      "YYYY-MM-DD", // 2023-01-05
+      "YYYY-M-D", // 2023-1-5
+      "DD/MM/YYYY", // 05/01/2023
+      "D/M/YYYY", // 5/1/2023
+      "MM/DD/YYYY", // 01/05/2023
+      "M/D/YYYY", // 1/5/2023
+      "YYYY/MM/DD", // 2023/01/05
+      "YYYY/M/D", // 2023/1/5
+      "DD-MM-YYYY", // 05-01-2023
+      "D-M-YYYY", // 5-1-2023
+      "MM-DD-YYYY", // 01-05-2023
+      "M-D-YYYY", // 1-5-2023
+      "YYYY.MM.DD", // 2023.01.05
+      "YYYY.M.D", // 2023.1.5
+      "D.M.YYYY", // 5.1.2023
+      "M.D.YYYY", // 1.5.2023
+    ];
 
-  // Process each schedule
-  await Promise.all(
-    schedules.map(async (schedule) => {
-      try {
-        console.log("Processing schedule:", schedule);
+    let parsedDate;
+    for (const format of formats) {
+      parsedDate = moment(dateString, format, true);
+      if (parsedDate.isValid()) break;
+    }
 
-        const { subject: subjectName, date, shift, rooms, standard } = schedule;
+    return parsedDate.isValid() ? parsedDate.toDate() : null;
+  };
 
-        // Validate required fields for each schedule
-        if (!subjectName || !date || !shift || !rooms?.length) {
-          errors.push({ schedule, error: "Missing required fields" });
-          return;
-        }
+  const processSchedule = async (schedule, index) => {
+    try {
+      const rawSchedule = { ...schedule };
 
-        // Find or create the subject
-        let subject;
-        const existingSubject = await Subject.findOne({
-          name: subjectName.trim(),
+      // Normalize keys to lowercase
+      const normalizedSchedule = Object.keys(rawSchedule).reduce((acc, key) => {
+        acc[key.toLowerCase()] = rawSchedule[key];
+        return acc;
+      }, {});
+
+      const {
+        subject: subjectName,
+        date,
+        shift,
+        rooms,
+        standard,
+      } = normalizedSchedule;
+
+      // Validate required fields
+      const missingFields = [];
+      if (!subjectName) missingFields.push("subject");
+      if (!date) missingFields.push("date");
+      if (!shift) missingFields.push("shift");
+      if (!rooms) missingFields.push("rooms");
+
+      if (missingFields.length > 0) {
+        errors.push({
+          row: index + 1,
+          error: `Missing required fields: ${missingFields.join(", ")}`,
+          rawData: rawSchedule,
         });
-        if (existingSubject) {
-          subject = existingSubject._id;
-        } else {
-          const newSubject = await Subject.create({ name: subjectName.trim() });
-          subject = newSubject._id;
-        }
-
-        // Check for existing exam schedule with subject, date, and shift
-        const existingExamSchedule = await ExamSchedule.findOne({
-          subject,
-          date: new Date(date),
-          shift,
-        });
-
-        if (existingExamSchedule) {
-          errors.push({ schedule, error: "Exam schedule already exists" });
-          return;
-        }
-
-        // Create new exam schedule
-        const newSchedule = await ExamSchedule.create({
-          subject,
-          date: new Date(date),
-          shift,
-          rooms,
-          standard,
-        });
-
-        console.log("Schedule created successfully:", newSchedule);
-        results.push(newSchedule);
-      } catch (error) {
-        console.error("Error creating schedule:", error);
-        errors.push({ schedule, error: error.message });
+        return;
       }
-    })
+
+      // Parse date
+      const parsedDate = parseDate(date);
+      if (!parsedDate) {
+        errors.push({
+          row: index + 1,
+          error: `Invalid date format: ${date}`,
+          rawData: rawSchedule,
+        });
+        return;
+      }
+
+      // Normalize shift
+      const normalizedShift =
+        shift.charAt(0).toUpperCase() + shift.slice(1).toLowerCase();
+      if (!["Morning", "Evening"].includes(normalizedShift)) {
+        errors.push({
+          row: index + 1,
+          error: `Invalid shift: ${shift}`,
+          rawData: rawSchedule,
+        });
+        return;
+      }
+
+      // Process subject
+      const subjectNameNormalized = subjectName.trim().toLowerCase();
+      let subject = await Subject.findOne({
+        name: { $regex: new RegExp(`^${subjectNameNormalized}$`, "i") },
+      });
+
+      if (!subject) {
+        try {
+          subject = await Subject.create({ name: subjectName.trim() });
+        } catch (error) {
+          errors.push({
+            row: index + 1,
+            error: `Failed to create subject: ${error.message}`,
+            rawData: rawSchedule,
+          });
+          return;
+        }
+      }
+
+      // Process rooms
+      const roomsArray =
+        typeof rooms === "string"
+          ? rooms.split(",").map((r) => r.trim())
+          : Array.isArray(rooms)
+            ? rooms
+            : [];
+
+      if (roomsArray.length === 0) {
+        errors.push({
+          row: index + 1,
+          error: "No valid rooms provided",
+          rawData: rawSchedule,
+        });
+        return;
+      }
+
+      // Check for existing schedule
+      const existing = await ExamSchedule.findOne({
+        subject: subject._id,
+        date: parsedDate,
+        shift: normalizedShift,
+      });
+
+      if (existing) {
+        errors.push({
+          row: index + 1,
+          error: "Schedule already exists",
+          rawData: rawSchedule,
+        });
+        return;
+      }
+
+      // Create new schedule
+      const newSchedule = await ExamSchedule.create({
+        subject: subject._id,
+        date: parsedDate,
+        shift: normalizedShift,
+        rooms: roomsArray,
+        standard: standard?.trim(),
+      });
+
+      results.push(newSchedule);
+    } catch (error) {
+      errors.push({
+        row: index + 1,
+        error: error.message,
+        rawData: rawSchedule,
+      });
+    }
+  };
+
+  // Process schedules in sequence for better error tracking
+  for (let i = 0; i < schedules.length; i++) {
+    await processSchedule(schedules[i], i);
+  }
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        total: schedules.length,
+        successCount: results.length,
+        errorCount: errors.length,
+        errors,
+        sampleError: errors[0], // Send first error as sample
+      },
+      "Bulk upload completed"
+    )
   );
-
-  console.log("Bulk upload completed. Results:", results);
-  console.log("Errors during bulk upload:", errors);
-
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        { successCount: results.length, errorCount: errors.length, errors },
-        "Bulk upload completed"
-      )
-    );
 });
 export {
   addExamDate,
