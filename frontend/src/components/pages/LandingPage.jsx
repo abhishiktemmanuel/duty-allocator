@@ -73,12 +73,6 @@ const LandingPage = () => {
             <p className="text-lg mb-4">
               Email: <a href="support@abhishikt.com" className="text-blue-600">support@abhishikt.com</a>
             </p>
-            <p className="text-lg mb-4">
-              Phone: +91 6393902742
-            </p >
-            <p className="text-lg mb-4">
-              Write to us at 15/29 A, Civil Lines, Kanpur, Uttar Pradesh, India - 208001
-            </p>
 
           </div>
         </div>
