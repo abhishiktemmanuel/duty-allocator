@@ -11,13 +11,15 @@ import {
   FiEyeOff, 
   FiAlertCircle, 
   FiLoader, 
-  FiGlobe 
+  FiGlobe,
+  FiPhone 
 } from "react-icons/fi";
 
 const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     orgName: "",
@@ -178,6 +180,21 @@ const Register = () => {
               id="email"
               name="email"
               value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30"
+            />
+          </div>
+
+          {/* Phone */}
+          <div className="relative">
+            <FiPhone className="absolute top-3.5 left-4 text-gray-400 dark:text-gray-500" />
+            <input
+              type="text"
+              placeholder="Phone Number"
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               required
               className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30"
