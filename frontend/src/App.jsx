@@ -113,7 +113,7 @@ function AppContent() {
               />
               <Route
                 path="*"
-                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : (hasActiveSubscription ? '/teachers' : '/profile')} />}
+                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : (hasActiveSubscription ? '/schedule' : '/profile')} />}
               />
             </Routes>
           </div>
