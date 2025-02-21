@@ -14,12 +14,15 @@ import {
   FiGlobe,
   FiPhone 
 } from "react-icons/fi";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    phoneNumber: "",
     password: "",
     confirmPassword: "",
     orgName: "",
@@ -35,10 +38,20 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const isValidPhoneNumber = (phoneNumber) => {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(phoneNumber);
+  };
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage("Passwords do not match");
+      return;
+    }
+    if (!isValidPhoneNumber(formData.phoneNumber)) {
+      setErrorMessage("Invalid phone number");
       return;
     }
     setLoading(true);
@@ -53,6 +66,7 @@ const Register = () => {
       setLoading(false);
     }
   };
+  
 
 
   return (
@@ -188,18 +202,22 @@ const Register = () => {
 
           {/* Phone */}
           <div className="relative">
-            <FiPhone className="absolute top-3.5 left-4 text-gray-400 dark:text-gray-500" />
-            <input
-              type="text"
-              placeholder="Phone Number"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30"
-            />
-          </div>
+  <FiPhone className="absolute top-3.5 left-4 text-gray-400 dark:text-gray-500 z-10" />
+  <PhoneInput
+    country={'in'}
+    value={formData.phoneNumber}
+    onChange={(phone) => setFormData({ ...formData, phoneNumber: phone })}
+    inputProps={{
+      name: 'phoneNumber',
+      required: true,
+      className: 'w-full pl-20 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-800 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-500/30'
+    }}
+    containerClass="relative"
+    buttonClass="absolute top-1/2 transform  left-10 z-10 bg-transparent border-none"
+    dropdownClass="bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white"
+  />
+</div>
+
   
           {/* Password */}
           <div className="relative">

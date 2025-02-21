@@ -13,6 +13,7 @@ const Profile = () => {
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
 
@@ -26,6 +27,7 @@ const Profile = () => {
       setProfile(data.data);
       setName(data.data.profile.name);
       setEmail(data.data.profile.email);
+      setPhoneNumber(data.data.profile.phoneNumber);
       setLoading(false);
     } catch (err) {
       setError('Error fetching profile details');
@@ -96,6 +98,7 @@ const Profile = () => {
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-white">{profile.profile.name}</h1>
               <p className="text-gray-400">{profile.profile.email}</p>
+              <p className="text-gray-400 ">{profile.profile.phoneNumber}</p>
             </div>
             {!editMode && (
               <button
@@ -130,6 +133,7 @@ const Profile = () => {
                   className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
+
               <div className="flex space-x-4">
                 <button
                   type="submit"

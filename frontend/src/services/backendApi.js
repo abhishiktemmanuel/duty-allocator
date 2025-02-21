@@ -444,7 +444,6 @@ export const addTicketComment = async (ticketId, comment) => {
 export const createSubscription = async (planId) => {
   try {
     const response = await API.post("/subscriptions/create", { planId });
-    console.log("response", response.data);
     return response.data;
   } catch (error) {
     console.error(

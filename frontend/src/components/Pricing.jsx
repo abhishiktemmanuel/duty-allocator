@@ -60,6 +60,10 @@ const Pricing = () => {
           alert(`Subscription successful! Payment ID: ${response.razorpay_payment_id}`);
           handleSuccessfulSubscription();
         },
+        "prefill": {
+                   "email": "abc@gmail.com",
+                   "contact": "8888888888"
+              },
         amount: data.amount, // Ensure this is provided by your backend
         currency: 'INR', // Or the appropriate currency code
       };
