@@ -215,33 +215,51 @@ const addBulkExamSchedules = asyncHandler(async (req, res) => {
   }
 
   const ExamSchedule = req.models.ExamSchedule;
+  const Subject = req.models.Subject;
   const results = [];
   const errors = [];
 
-  console.log("Starting bulk upload of schedules..."); // Debugging
+  console.log("Starting bulk upload of schedules...");
 
-  // Process schedules in parallel
+  // Process each schedule
   await Promise.all(
     schedules.map(async (schedule) => {
       try {
-        console.log("Processing schedule:", schedule); // Debugging
+        console.log("Processing schedule:", schedule);
 
-        const { subject, date, shift, rooms, standard } = schedule;
+        const { subject: subjectName, date, shift, rooms, standard } = schedule;
 
-        // Validate existing schedule
-        const existing = await ExamSchedule.findOne({
+        // Validate required fields for each schedule
+        if (!subjectName || !date || !shift || !rooms?.length) {
+          errors.push({ schedule, error: "Missing required fields" });
+          return;
+        }
+
+        // Find or create the subject
+        let subject;
+        const existingSubject = await Subject.findOne({
+          name: subjectName.trim(),
+        });
+        if (existingSubject) {
+          subject = existingSubject._id;
+        } else {
+          const newSubject = await Subject.create({ name: subjectName.trim() });
+          subject = newSubject._id;
+        }
+
+        // Check for existing exam schedule with subject, date, and shift
+        const existingExamSchedule = await ExamSchedule.findOne({
           subject,
           date: new Date(date),
           shift,
         });
 
-        if (existing) {
-          console.log("Schedule already exists:", schedule); // Debugging
-          errors.push({ schedule, error: "Schedule already exists" });
+        if (existingExamSchedule) {
+          errors.push({ schedule, error: "Exam schedule already exists" });
           return;
         }
 
-        // Create new schedule
+        // Create new exam schedule
         const newSchedule = await ExamSchedule.create({
           subject,
           date: new Date(date),
@@ -250,17 +268,17 @@ const addBulkExamSchedules = asyncHandler(async (req, res) => {
           standard,
         });
 
-        console.log("Schedule created successfully:", newSchedule); // Debugging
+        console.log("Schedule created successfully:", newSchedule);
         results.push(newSchedule);
       } catch (error) {
-        console.error("Error creating schedule:", error); // Debugging
+        console.error("Error creating schedule:", error);
         errors.push({ schedule, error: error.message });
       }
     })
   );
 
-  console.log("Bulk upload completed. Results:", results); // Debugging
-  console.log("Errors during bulk upload:", errors); // Debugging
+  console.log("Bulk upload completed. Results:", results);
+  console.log("Errors during bulk upload:", errors);
 
   return res
     .status(201)
