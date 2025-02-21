@@ -51,8 +51,8 @@ function AppContent() {
       case 'superAdmin':
       case 'admin':
         return [
-          { path: '/teachers', label: 'Teachers' },
           { path: '/schedule', label: 'Schedule' },
+          { path: '/teachers', label: 'Teachers' },
           { path: '/duty', label: 'Duty' },
           { path: '/tickets', label: 'Tickets' },
           { path: '/profile', label: 'Profile' },
@@ -109,7 +109,7 @@ function AppContent() {
               {/* Default Route for Authenticated Users */}
               <Route
                 path="/"
-                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : (hasActiveSubscription ? '/teachers' : '/profile')} />}
+                element={<Navigate to={user.role === 'endUser' ? '/dashboard' : (hasActiveSubscription ? '/schedule' : '/profile')} />}
               />
               <Route
                 path="*"
