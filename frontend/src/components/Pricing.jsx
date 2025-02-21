@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useRazorpay } from '../hooks/useRazorpay';
-import { createSubscription } from '../services/backendApi';
+import { createSubscription, getProfileDetails } from '../services/backendApi';
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 
-const Pricing = () => {
+const Pricing = ({ profileEmail, profilePhone }) => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const { Razorpay, isLoading: isRazorpayLoading, error: razorpayError } = useRazorpay();
@@ -60,10 +61,10 @@ const Pricing = () => {
           alert(`Subscription successful! Payment ID: ${response.razorpay_payment_id}`);
           handleSuccessfulSubscription();
         },
-        "prefill": {
-                   "email": "abc@gmail.com",
-                   "contact": "8888888888"
-              },
+          "prefill": {
+            "email": profileEmail || user.email, // Use profile email if available, fallback to user email
+            "contact": profilePhone || "" // Use profile phone if available, fallback to empty string
+          },
         amount: data.amount, // Ensure this is provided by your backend
         currency: 'INR', // Or the appropriate currency code
       };
@@ -117,5 +118,9 @@ const Pricing = () => {
   );
 };
 
+Pricing.propTypes = {
+  profileEmail: PropTypes.string,
+  profilePhone: PropTypes.string
+};
 
 export default Pricing;

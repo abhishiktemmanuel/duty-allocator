@@ -191,52 +191,34 @@ const Profile = () => {
           </div>
 
           <div className="bg-gray-700 rounded-lg p-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-gray-400 text-sm mt-1">
-                Your subscription will remain active until the end of the current billing period
-              </p>
-              <button
-              onClick={handleCancelSubscription}
-              className="underline text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
-            >
-              Cancel Subscription
-            </button>
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-gray-400 text-sm mt-1">
+                  Your subscription will remain active until the end of the current billing period
+                </p>
+                <button
+                  onClick={handleCancelSubscription}
+                  className="underline text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
+                >
+                  Cancel Subscription
+                </button>
+              </div>
             </div>
-            
           </div>
         </div>
-
-          {/* {profile.subscription.payment && (
-            <div className="bg-gray-700 rounded-lg p-4 space-y-3">
-              {profile.subscription.payment.amount && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Last Payment</span>
-                  <span className="text-white">{profile.subscription.payment.amount}</span>
-                </div>
-              )}
-              {profile.subscription.payment.method && (
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300">Payment Method</span>
-                  <span className="text-white">{profile.subscription.payment.method}</span>
-                </div>
-              )}
-            </div>
-          )} */}
-        </div>
       )}
-            {/* Cancel Subscription */}
-      <div className="mt-6 space-y-4">
-        
-      </div>
     </div>
   ) : (
     <div className="text-center">
       <p className="text-gray-400 mb-6">No active subscription</p>
-      <Pricing />
+      <Pricing 
+        profileEmail={profile.profile.email} 
+        profilePhone={profile.profile.phoneNumber}
+      />
     </div>
   )}
 </div>
+
 
       </div>
     </div>
