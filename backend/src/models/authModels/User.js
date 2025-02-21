@@ -30,7 +30,6 @@ const UserSchema = new mongoose.Schema(
     verified: { type: Boolean, default: false },
     verificationToken: String,
     verificationExpires: Date,
-    passwordChangeRequired: { type: Boolean, default: false },
     phoneNumber: { type: String, unique: true, sparse: true },
     externalAccounts: [
       {

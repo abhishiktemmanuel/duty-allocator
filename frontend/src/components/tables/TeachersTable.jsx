@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import {Fragment, useEffect, useState } from "react";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 import {
   fetchTeachers,
   deleteTeacher,
@@ -7,6 +8,8 @@ import {
   fetchSchools,
   addBulkTeachers,
   deleteMultipleTeachers,
+  generateMergeUrl,
+  disconnectTeacherAccount,
 } from "../../services/backendApi";
 import { exportToCSV } from "../../services/csvExport";
 import MultiSelectWithAddOption from "../form-components/MultiSelectWithAddOption.jsx";
@@ -14,6 +17,8 @@ import SingleSelectWithAddOption from "../form-components/SingleSelectWithAddOpt
 import Modal from "../common/Modal"; // Ensure you have a Modal component
 
 const TeacherTable = () => {
+  const [expandedRow, setExpandedRow] = useState(null);
+  const [mergeUrls, setMergeUrls] = useState({});
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [schools, setSchools] = useState([]);
@@ -42,6 +47,29 @@ const TeacherTable = () => {
       setLoading(false);
     }
   };
+  const handleGenerateMergeUrl = async (teacherId) => {
+    try {
+      const { mergeUrl } = await generateMergeUrl(teacherId);
+      setMergeUrls(prev => ({ ...prev, [teacherId]: mergeUrl }));
+    } catch (error) {
+      console.error("Error generating merge URL:", error);
+      alert("Failed to generate merge URL");
+    }
+  };
+  const handleDisconnect = async (teacherId) => {
+    if (window.confirm("Are you sure you want to disconnect this account?")) {
+      try {
+        await disconnectTeacherAccount(teacherId);
+        await loadTeachers(); // Refresh the list
+      } catch (error) {
+        console.error("Disconnection failed:", error);
+        setError("Failed to disconnect account");
+      }
+    }
+  };
+  const toggleRowExpansion = (teacherId) => {
+    setExpandedRow(prev => prev === teacherId ? null : teacherId);
+  };
 
   const loadSubjects = async () => {
     try {
@@ -66,12 +94,16 @@ const TeacherTable = () => {
       { label: "Teacher Name", key: "name" },
       { label: "Subjects", key: "subjects" },
       { label: "School", key: "school" },
+      { label: "Merge URL", key: "mergeUrl" },
+      { label: "Account Status", key: "status" },
     ];
 
     const exportData = teachers.map((teacher) => ({
       name: teacher.name,
       subjects: teacher.subjects.map((subject) => subject.name).join(", "),
       school: teacher.school?.name || "N/A",
+      mergeUrl: mergeUrls[teacher._id] || "N/A",
+      status: teacher.accountStatus === "connected" ? "Connected" : "Not Connected"
     }));
 
     exportToCSV(exportData, {
@@ -276,25 +308,31 @@ const TeacherTable = () => {
             <tbody>
               {Array.isArray(teachers) && teachers.length > 0 ? (
                 teachers.map((teacher) => (
+                  <Fragment key={teacher._id}>
                   <tr
                     key={teacher._id}
                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 lg:hover:bg-gray-50 lg:dark:hover:bg-gray-600"
+                    onClick={() => toggleRowExpansion(teacher._id)}
                   >
                     <td className="py-4 px-6" data-label="Select">
                       <input
                         type="checkbox"
                         checked={selectedTeachers.includes(teacher._id)}
-                        onChange={() => toggleTeacherSelection(teacher._id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleTeacherSelection(teacher._id);
+                        }}
                         className="dark-checkbox"
                       />
                     </td>
                     <td className="py-4 px-6 font-medium" data-label="Teacher Name">
                       {editingTeacherId === teacher._id ? (
                         <input
-                          type="text"
-                          value={teacher.name}
-                          onChange={(e) => handleInputChange(teacher._id, "name", e.target.value)}
-                          className="w-full p-2 border rounded text-base"
+                        type="text"
+                        value={teacher.name}
+                        onChange={(e) => handleInputChange(teacher._id, "name", e.target.value)}
+                        className="w-full p-2 border rounded text-base"
+                        onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
                         teacher.name
@@ -342,28 +380,42 @@ const TeacherTable = () => {
                         {editingTeacherId === teacher._id ? (
                           <>
                             <button
-                              onClick={() => handleUpdate(teacher._id)}
+                               onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdate(teacher._id);
+                              }}
                               className="text-green-600 dark:text-green-400 hover:underline text-sm font-medium"
                             >
                               Save
                             </button>
                             <button
-                              onClick={() => setEditingTeacherId(null)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTeacherId(null);
+                              }}
                               className="text-gray-600 dark:text-gray-400 hover:underline text-sm font-medium"
                             >
                               Cancel
                             </button>
                           </>
                         ) : (
+                          
                           <button
-                            onClick={() => handleEdit(teacher._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(teacher._id);
+                          }}
                             className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
                           >
                             Edit
                           </button>
                         )}
+                        
                         <button
-                          onClick={() => handleDelete(teacher._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(teacher._id);
+                          }}
                           className="text-red-600 dark:text-red-400 hover:underline text-sm font-medium"
                         >
                           Delete
@@ -371,6 +423,77 @@ const TeacherTable = () => {
                       </div>
                     </td>
                   </tr>
+                  {expandedRow === teacher._id && (
+                    <tr className="bg-gray-50 dark:bg-gray-700">
+                      <td colSpan="5" className="px-6 py-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Account Management</h4>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span
+                                className={`inline-block w-2 h-2 rounded-full ${
+                                  teacher.accountStatus === "connected"
+                                    ? "bg-green-500"
+                                    : "bg-gray-400"
+                                }`}
+                              />
+                              <span>
+                                Status: {teacher.accountStatus === "connected" ? "Connected" : "Not Connected"}
+                              </span>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <CopyToClipboard text={mergeUrls[teacher._id] || ""}>
+                                <button
+                                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 text-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!mergeUrls[teacher._id]) {
+                                      handleGenerateMergeUrl(teacher._id);
+                                    }
+                                  }}
+                                >
+                                  {mergeUrls[teacher._id] ? "📋 Copy URL" : "🔗 Generate URL"}
+                                </button>
+                              </CopyToClipboard>
+                              {teacher.accountStatus === "connected" && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDisconnect(teacher._id);
+                                  }}
+                                  className="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 text-sm"
+                                >
+                                  🚫 Disconnect
+                                </button>
+                              )}
+                            </div>
+                            {mergeUrls[teacher._id] && (
+                              <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 break-all">
+                                Merge URL: {mergeUrls[teacher._id]}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold mb-2">Connection History</h4>
+                            {teacher.connectionHistory?.length > 0 ? (
+                              <ul className="list-disc pl-4 text-sm">
+                                {teacher.connectionHistory.map((entry, idx) => (
+                                  <li key={idx} className="dark:text-gray-300">
+                                    {new Date(entry.date).toLocaleDateString()} - {entry.status}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                                No connection history available
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
                 ))
               ) : (
                 <tr>

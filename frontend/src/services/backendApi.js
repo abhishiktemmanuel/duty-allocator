@@ -261,10 +261,52 @@ export const submitTeacher = async (payload) => {
   }
 };
 
+// Add these new API functions to your backendApi.js
+export const generateMergeUrl = async (teacherId) => {
+  try {
+    const response = await API.post(`/teachers/${teacherId}/merge-url`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error generating merge URL:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to generate merge URL"
+    );
+  }
+};
+
+export const disconnectTeacherAccount = async (teacherId) => {
+  try {
+    const response = await API.post(`/teachers/${teacherId}/disconnect`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error disconnecting account:",
+      error.response?.data?.message || error.message
+    );
+    throw new Error(
+      error.response?.data?.message || "Failed to disconnect account"
+    );
+  }
+};
+
+// Add this to your existing teacher fetch function
 export const fetchTeachers = async () => {
   try {
     const response = await API.get("/teachers/getteachers");
-    return response.data.message;
+    console.log(
+      "response",
+      response.data.message.map((teacher) => ({
+        ...teacher,
+        accountStatus: teacher.connected ? "connected" : "not-connected",
+      }))
+    );
+    return response.data.message.map((teacher) => ({
+      ...teacher,
+      accountStatus: teacher.connected ? "connected" : "not-connected",
+    }));
   } catch (error) {
     console.error(
       "Error fetching teachers:",

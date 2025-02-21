@@ -504,6 +504,66 @@ const mergeTeacherAccount = asyncHandler(async (req, res) => {
   }
 });
 
+// teachers.controller.js
+const generateMergeUrl = asyncHandler(async (req, res) => {
+  const Teacher = req.models.Teacher;
+  const { teacherId } = req.params;
+  const orgId = req.orgContext.orgId;
+
+  const teacher = await Teacher.findById(teacherId).populate({
+    path: "globalUserId",
+    select: "mergeRequests",
+  });
+
+  const existingToken = teacher.globalUserId.mergeRequests.find((mr) =>
+    mr.organizationId.equals(orgId)
+  );
+
+  if (existingToken) {
+    return res.status(200).json({
+      mergeUrl: `${process.env.FRONTEND_URL}/merge?token=${existingToken.token}`,
+    });
+  }
+
+  const mergeToken = jwt.sign(
+    { teacherId, organizationId: orgId },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+
+  await User.findByIdAndUpdate(teacher.globalUserId, {
+    $push: {
+      mergeRequests: {
+        token: mergeToken,
+        organizationId: orgId,
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    },
+  });
+
+  res.status(200).json({
+    mergeUrl: `${process.env.FRONTEND_URL}/merge?token=${mergeToken}`,
+  });
+});
+
+// teachers.controller.js
+const disconnectTeacherAccount = asyncHandler(async (req, res) => {
+  const { teacherId } = req.params;
+  const orgId = req.orgContext.orgId;
+
+  const teacher = await Teacher.findById(teacherId);
+
+  await User.findByIdAndUpdate(teacher.globalUserId, {
+    $pull: {
+      organizations: { organizationId: orgId },
+    },
+  });
+
+  res.status(200).json({
+    message: "Account disconnected successfully",
+  });
+});
+
 export {
   registerTeacher,
   fetchAllTeachers,
@@ -513,4 +573,6 @@ export {
   addBulkTeachers,
   deleteMultipleTeachers,
   mergeTeacherAccount,
+  generateMergeUrl,
+  disconnectTeacherAccount,
 };
