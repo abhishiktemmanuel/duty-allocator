@@ -265,6 +265,8 @@ const ScheduleForm = ({ onScheduleAdded }) => {
       onRoomsChange={handleRoomsChange}
       placeholder="Add rooms..."
       error={errors.rooms}
+        className="input-field -200"
+  classNamePrefix="input-field"
     />
   </div>
 

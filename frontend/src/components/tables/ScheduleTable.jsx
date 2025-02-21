@@ -2,10 +2,12 @@ import { useEffect, useState, useRef } from 'react';
 import { format } from 'date-fns';
 import { fetchExamSchedules, deleteSchedule, updateSchedule, fetchSubjects, deleteMultipleSchedules } from '../../services/backendApi';
 import { exportToCSV } from '../../services/csvExport';
+import InputWithAddOption from '../form-components/InputWithAddOption.jsx'; 
 
 const ScheduleTable = () => {
   const [schedules, setSchedules] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [roomOptions, setRoomOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingSchedule, setEditingSchedule] = useState(null);
@@ -27,6 +29,14 @@ const ScheduleTable = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (schedules.length > 0) {
+      const allRooms = schedules.flatMap(s => s.rooms);
+      const uniqueRooms = [...new Set(allRooms)];
+      setRoomOptions(uniqueRooms.map(room => ({ value: room, label: room })));
+    }
+  }, [schedules]);
 
   const loadSubjects = async () => {
     try {
@@ -91,14 +101,7 @@ const ScheduleTable = () => {
           name: subjects.find(s => s.value === value)?.label,
         };
       } else if (field === 'rooms') {
-        // Capture cursor position before state update
-        cursorPosition.current = {
-          start: e.target.selectionStart,
-          end: e.target.selectionEnd,
-          valueBefore: e.target.value,
-        };
-        // Split by commas, trim each room, and filter out empty strings
-        newValue = value.split(',').map(room => room.trim()).filter(room => room !== '');
+        newValue = value.map(room => room.value);
       } else if (field === 'date') {
         newValue = new Date(value).toISOString();
       }
@@ -277,17 +280,18 @@ const ScheduleTable = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
-                  Rooms (comma-separated)
-                </label>
-                <input
-                  ref={roomsInputRef}
-                  type="text"
-                  value={editingSchedule.rooms.join(', ')}
-                  onChange={(e) => handleInputChange(e, 'rooms')}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:border-gray-600"
-                />
-              </div>
+      <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+        Rooms
+      </label>
+      <InputWithAddOption
+        options={roomOptions}
+        value={editingSchedule.rooms.map(r => ({ value: r, label: r }))}
+        onRoomsChange={(selectedRooms) => 
+          handleInputChange({ target: { value: selectedRooms } }, 'rooms')
+        }
+        placeholder="Add rooms..."
+      />
+    </div>
               <div>
                 <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
                   Standard
@@ -390,13 +394,15 @@ const ScheduleTable = () => {
                           <option value="Evening">Evening</option>
                         </select>
                       </td>
-                      <td className="py-4 px-6">
-                        <input
-                          ref={roomsInputRef}
-                          type="text"
-                          value={editingSchedule.rooms.join(', ')}
-                          onChange={(e) => handleInputChange(e, 'rooms')}
-                          className="border rounded px-2 py-1 w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      <td className="py-4 px-3">
+                        <InputWithAddOption
+                          options={roomOptions}
+                          value={editingSchedule.rooms.map(r => ({ value: r, label: r }))}
+                          onRoomsChange={(selectedRooms) => 
+                            handleInputChange({ target: { value: selectedRooms } }, 'rooms')
+                          }
+                          placeholder="Add rooms..."
+
                         />
                       </td>
                       <td className="py-4 px-6">
@@ -416,7 +422,7 @@ const ScheduleTable = () => {
                             Save
                           </button>
                           <button
-                            className="font-medium text-gray-600 hover:underline"
+                            className="font-medium text-red-600 hover:underline"
                             onClick={handleCancelEdit}
                           >
                             Cancel

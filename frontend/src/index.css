@@ -221,34 +221,6 @@ custom-select-control:hover {
     @apply w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600;
   }
 
-  .react-tel-input .selected-flag {
-    background-color: transparent !important;
-    border: none !important;
-  }
   
-  .react-tel-input .selected-flag:hover,
-  .react-tel-input .selected-flag:focus {
-    background-color: transparent !important;
-  }
-  
-  .react-tel-input .flag-dropdown {
-    background-color: transparent !important;
-    border: none !important;
-  }
-  
-  .react-tel-input .country-list {
-    background-color: #1f2937 !important;
-    border: 1px solid #374151 !important;
-    border-radius: 0.5rem !important;
-    margin-top: 0.25rem !important;
-  }
-  
-  .react-tel-input .country-list .country:hover {
-    background-color: #374151 !important;
-  }
-  
-  .react-tel-input .country-list .country.highlight {
-    background-color: #4b5563 !important;
-  }
   
 }

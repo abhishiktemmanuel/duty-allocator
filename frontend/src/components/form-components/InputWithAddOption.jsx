@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import PropTypes from 'prop-types';
 
-const InputWithAddOption = ({ onRoomsChange, placeholder = 'Add or select rooms...', value }) => {
+const InputWithAddOption = ({
+  onRoomsChange,
+  placeholder = 'Add or select rooms...',
+  value,
+  className, // Destructure className
+  classNamePrefix, // Destructure classNamePrefix
+}) => {
   const [inputs, setInputs] = useState(value || []);
 
-  // Add useEffect to sync with external value changes
   useEffect(() => {
     setInputs(value || []);
   }, [value]);
@@ -13,37 +18,33 @@ const InputWithAddOption = ({ onRoomsChange, placeholder = 'Add or select rooms.
   const handleCreateInput = (inputValue) => {
     if (!inputValue.trim()) return;
     
-    try {
-      const newInput = { label: inputValue, value: inputValue };
-      const updatedInputs = [...inputs, newInput];
-      setInputs(updatedInputs);
-      if (onRoomsChange) onRoomsChange(updatedInputs);
-    } catch (error) {
-      console.error('Error creating room:', error);
-    }
+    const newInput = { label: inputValue, value: inputValue };
+    const updatedInputs = [...inputs, newInput];
+    setInputs(updatedInputs);
+    onRoomsChange?.(updatedInputs);
   };
 
   const handleChange = (selected) => {
     const updatedInputs = selected || [];
     setInputs(updatedInputs);
-    if (onRoomsChange) onRoomsChange(updatedInputs);
+    onRoomsChange?.(updatedInputs);
   };
 
   return (
     <div className="w-full">
       <CreatableSelect
-  isMulti
-  options={inputs}
-  value={inputs}
-  onChange={handleChange}
-  onCreateOption={handleCreateInput}
-  placeholder={placeholder}
-  className="input-field -200"
-  classNamePrefix="input-field"
-  isClearable={true}
-  isSearchable={true}
-/>
-
+        isMulti
+        options={inputs}
+        value={inputs}
+        onChange={handleChange}
+        onCreateOption={handleCreateInput}
+        placeholder={placeholder}
+        isClearable
+        isSearchable
+        // Pass props to CreatableSelect
+        className={className}
+        classNamePrefix={classNamePrefix}
+      />
     </div>
   );
 };
@@ -56,9 +57,9 @@ InputWithAddOption.propTypes = {
       label: PropTypes.string.isRequired,
       value: PropTypes.string.isRequired,
     })
-  )
+  ),
+  className: PropTypes.string, // Add className prop type
+  classNamePrefix: PropTypes.string, // Add classNamePrefix prop type
 };
 
 export default InputWithAddOption;
-
-
