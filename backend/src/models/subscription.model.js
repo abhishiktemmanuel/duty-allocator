@@ -163,7 +163,7 @@ SubscriptionSchema.statics.findActiveSubscription = function (userId) {
   return this.findOne({
     userId,
     status: "active",
-    currentEnd: { $gt: new Date() },
+    // currentEnd: { $gt: new Date() },
   });
 };
 

@@ -50,10 +50,10 @@ export async function createSubscription(req, res) {
       razorpaySubscriptionId: subscription.id,
       planId,
       customerId: subscription.customer_id || null,
-      status: "created",
+      status: "active",
       subscriptionType: subscription.type || null,
       totalCount: subscription.total_count || null,
-      remainingCount: subscription.total_count || null,
+      remainingCount: subscription.remaining_count || null,
       customerNotify: subscription.customer_notify ?? true,
       source: subscription.source || "api",
       notes: subscription.notes || null,
@@ -99,6 +99,8 @@ export async function getSubscriptionStatus(req, res) {
       message: subscription ? null : "No active subscription found",
     };
 
+    console.log("Subscription status for user:", userId, result);
+
     return res ? res.status(200).json(result) : result;
   } catch (error) {
     console.error("Error fetching subscription status:", error);
@@ -112,10 +114,13 @@ export async function getSubscriptionStatus(req, res) {
 
 export const razorpayWebhookHandler = async (req, res) => {
   try {
-    // Verify webhook signature
+    // Verify webhook signature using raw request body
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const shasum = crypto.createHmac("sha256", secret);
-    shasum.update(JSON.stringify(req.body));
+
+    // Get raw body and verify signature
+    const rawBody = req.body.toString();
+    shasum.update(rawBody);
     const digest = shasum.digest("hex");
 
     if (digest !== req.headers["x-razorpay-signature"]) {
@@ -123,12 +128,34 @@ export const razorpayWebhookHandler = async (req, res) => {
       return res.status(403).json({ message: "Invalid signature" });
     }
 
-    const { event, payload } = req.body;
+    // Parse raw body to JSON
+    const webhookData = JSON.parse(rawBody);
+    const { event, payload } = webhookData;
+
+    // Validate event structure
+    if (!event || !payload) {
+      return res
+        .status(400)
+        .json({ error: "Invalid webhook payload structure" });
+    }
+
+    // Handle only subscription events
+    if (!event.startsWith("subscription.")) {
+      console.log(`Ignoring non-subscription event: ${event}`);
+      return res.status(200).json({ received: true });
+    }
+
+    // Validate subscription entity existence
+    if (!payload?.subscription?.entity) {
+      console.error("Invalid subscription payload structure");
+      return res.status(400).json({ error: "Invalid subscription payload" });
+    }
+
     const subscriptionEntity = payload.subscription.entity;
     const subscriptionId = subscriptionEntity.id;
 
-    // Prepare payment details if available
-    const paymentDetails = payload.payment
+    // Safely prepare payment details
+    const paymentDetails = payload.payment?.entity
       ? {
           paymentId: payload.payment.entity.id,
           orderId: payload.payment.entity.order_id,
@@ -152,7 +179,7 @@ export const razorpayWebhookHandler = async (req, res) => {
         }
       : null;
 
-    // Prepare base update data
+    // Prepare update data with null checks
     const updateData = {
       currentStart: subscriptionEntity.current_start
         ? new Date(subscriptionEntity.current_start * 1000)
@@ -175,17 +202,19 @@ export const razorpayWebhookHandler = async (req, res) => {
       remainingCount: subscriptionEntity.remaining_count || null,
       notes: subscriptionEntity.notes || null,
       offerId: subscriptionEntity.offer_id || null,
-      hasScheduledChanges: subscriptionEntity.has_scheduled_changes ?? false,
+      hasScheduledChanges: Boolean(subscriptionEntity.has_scheduled_changes),
       changeScheduledAt: subscriptionEntity.change_scheduled_at
         ? new Date(subscriptionEntity.change_scheduled_at * 1000)
         : null,
     };
 
+    // Handle different subscription events
     switch (event) {
       case "subscription.authenticated":
         await Subscription.findOneAndUpdate(
           { razorpaySubscriptionId: subscriptionId },
-          { status: "active", ...updateData }
+          { status: "active", ...updateData },
+          { upsert: true }
         );
         break;
 
@@ -196,6 +225,7 @@ export const razorpayWebhookHandler = async (req, res) => {
             status: "active",
             paymentDetails,
             ...updateData,
+            $inc: { paidCount: 1 },
           },
           { new: true }
         );
@@ -235,14 +265,18 @@ export const razorpayWebhookHandler = async (req, res) => {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event}`);
+        console.warn(`Unhandled subscription event type: ${event}`);
         break;
     }
 
     res.status(200).json({ received: true });
   } catch (error) {
     console.error("Webhook processing error:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: "Internal server error",
+      message: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
 };
 
